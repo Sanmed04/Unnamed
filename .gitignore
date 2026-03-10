@@ -1,0 +1,15 @@
+# Datos sensibles (nunca subir)
+.env
+
+# Config generado desde .env (contiene la API key)
+js/config.js
+
+# Dependencias
+node_modules/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
