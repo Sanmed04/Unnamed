@@ -3,125 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- OWASP: Content Security Policy para reducir riesgo XSS e inyección de scripts -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://maps.googleapis.com https://*.googleapis.com https://*.gstatic.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.googleapis.com https://*.gstatic.com; base-uri 'self';">
-  <title>¿Dónde Está? — Encontrá comida cerca tuyo</title>
+  <title>Web Job Finder — Negocios cerca, posibles clientes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>¿Dónde Está?</h1>
-      <p class="subtitle">Encontrá comida y bebida cerca tuyo</p>
+  <div class="app-wrap">
+    <header class="main-header">
+      <h1>Web Job Finder</h1>
+      <p class="subtitle">Encontrá negocios cerca y armá tu lista de posibles clientes</p>
+
+      <section class="location-section" id="locationSection">
+        <p id="locationMessage">Permití el acceso a tu ubicación para cargar negocios.</p>
+        <div class="fallback-row" id="fallbackRow" style="display: none;">
+          <input type="text" id="cityInput" placeholder="Ej: Buenos Aires, Córdoba" maxlength="80">
+          <button type="button" id="citySearchBtn">Usar esta ciudad</button>
+        </div>
+        <p class="location-status" id="locationStatus"></p>
+      </section>
+
+      <div class="header-actions" id="headerActions" style="display: none;">
+        <div class="barrio-wrap" id="barrioWrap">
+          <label for="barrioSelect" class="barrio-label">Zona:</label>
+          <select id="barrioSelect" class="barrio-select" aria-label="Zona de búsqueda">
+            <option value="">Mi ubicación</option>
+            <option value="Agronomía, Buenos Aires">Agronomía</option>
+            <option value="Almagro, Buenos Aires">Almagro</option>
+            <option value="Balvanera, Buenos Aires">Balvanera</option>
+            <option value="Barracas, Buenos Aires">Barracas</option>
+            <option value="Belgrano, Buenos Aires">Belgrano</option>
+            <option value="Boca, Buenos Aires">La Boca</option>
+            <option value="Boedo, Buenos Aires">Boedo</option>
+            <option value="Caballito, Buenos Aires">Caballito</option>
+            <option value="Chacarita, Buenos Aires">Chacarita</option>
+            <option value="Coghlan, Buenos Aires">Coghlan</option>
+            <option value="Colegiales, Buenos Aires">Colegiales</option>
+            <option value="Constitución, Buenos Aires">Constitución</option>
+            <option value="Flores, Buenos Aires">Flores</option>
+            <option value="Floresta, Buenos Aires">Floresta</option>
+            <option value="La Paternal, Buenos Aires">La Paternal</option>
+            <option value="Liniers, Buenos Aires">Liniers</option>
+            <option value="Mataderos, Buenos Aires">Mataderos</option>
+            <option value="Monte Castro, Buenos Aires">Monte Castro</option>
+            <option value="Monserrat, Buenos Aires">Monserrat</option>
+            <option value="Nueva Pompeya, Buenos Aires">Nueva Pompeya</option>
+            <option value="Núñez, Buenos Aires">Núñez</option>
+            <option value="Palermo, Buenos Aires">Palermo</option>
+            <option value="Parque Avellaneda, Buenos Aires">Parque Avellaneda</option>
+            <option value="Parque Chacabuco, Buenos Aires">Parque Chacabuco</option>
+            <option value="Parque Chas, Buenos Aires">Parque Chas</option>
+            <option value="Parque Patricios, Buenos Aires">Parque Patricios</option>
+            <option value="Puerto Madero, Buenos Aires">Puerto Madero</option>
+            <option value="Recoleta, Buenos Aires">Recoleta</option>
+            <option value="Retiro, Buenos Aires">Retiro</option>
+            <option value="Saavedra, Buenos Aires">Saavedra</option>
+            <option value="San Cristóbal, Buenos Aires">San Cristóbal</option>
+            <option value="San Nicolás, Buenos Aires">San Nicolás</option>
+            <option value="San Telmo, Buenos Aires">San Telmo</option>
+            <option value="Vélez Sársfield, Buenos Aires">Vélez Sársfield</option>
+            <option value="Versalles, Buenos Aires">Versalles</option>
+            <option value="Villa Crespo, Buenos Aires">Villa Crespo</option>
+            <option value="Villa del Parque, Buenos Aires">Villa del Parque</option>
+            <option value="Villa Devoto, Buenos Aires">Villa Devoto</option>
+            <option value="Villa General Mitre, Buenos Aires">Villa General Mitre</option>
+            <option value="Villa Lugano, Buenos Aires">Villa Lugano</option>
+            <option value="Villa Luro, Buenos Aires">Villa Luro</option>
+            <option value="Villa Ortúzar, Buenos Aires">Villa Ortúzar</option>
+            <option value="Villa Pueyrredón, Buenos Aires">Villa Pueyrredón</option>
+            <option value="Villa Real, Buenos Aires">Villa Real</option>
+            <option value="Villa Riachuelo, Buenos Aires">Villa Riachuelo</option>
+            <option value="Villa Santa Rita, Buenos Aires">Villa Santa Rita</option>
+            <option value="Villa Urquiza, Buenos Aires">Villa Urquiza</option>
+          </select>
+        </div>
+        <button type="button" id="loadPlacesBtn" class="btn-load">Cargar negocios cercanos</button>
+        <div class="search-by-name-wrap" id="searchByNameWrap">
+          <input type="text" id="searchByNameInput" placeholder="Buscar por nombre (ej. Luogo cafe)" maxlength="120" aria-label="Buscar negocio por nombre">
+          <button type="button" id="searchByNameBtn" class="btn-search-name">Buscar</button>
+        </div>
+        <div class="filter-row" id="filterRow" style="display: none;">
+          <label for="categoryFilter" class="filter-label">Categoría:</label>
+          <select id="categoryFilter" class="filter-select" aria-label="Filtrar por tipo de negocio">
+            <option value="all">Todos los tipos</option>
+            <option value="comida">Comida y bebida</option>
+            <option value="compras">Compras</option>
+            <option value="servicios">Servicios</option>
+            <option value="salud">Salud</option>
+            <option value="alojamiento">Alojamiento</option>
+            <option value="automotor">Automotor (lavado y reparación)</option>
+            <option value="gym">Gimnasios</option>
+          </select>
+          <label class="filter-checkbox-wrap">
+            <input type="checkbox" id="filterPosiblesClientes" aria-label="Solo posibles clientes">
+            <span>Solo posibles clientes</span>
+          </label>
+          <label class="filter-checkbox-wrap">
+            <input type="checkbox" id="filterSinWeb" aria-label="Solo negocios sin página web">
+            <span>Solo sin página web</span>
+          </label>
+        </div>
+      </div>
     </header>
 
-    <section class="location-section" id="locationSection">
-      <p id="locationMessage">Permití el acceso a tu ubicación para buscar cerca tuyo.</p>
-      <div class="fallback-row" id="fallbackRow" style="display: none;">
-        <input type="text" id="cityInput" placeholder="Ej: Buenos Aires, Córdoba" maxlength="80">
-        <button type="button" id="citySearchBtn">Usar esta ciudad</button>
+    <div class="main-content">
+      <aside class="map-panel" id="mapPanel">
+        <div id="mapContainer" class="map-container"></div>
+      </aside>
+      <section class="list-panel" id="listPanel">
+        <div class="list-panel-columns">
+          <div class="list-panel-col-negocios">
+            <div class="list-header" id="listHeader" style="display: none;">
+              <div class="list-header-top">
+                <h2 id="resultsTitle">Negocios</h2>
+                <p class="list-count" id="listCount"></p>
+              </div>
+              <div class="list-sort-wrap">
+                <label for="sortOrder" class="sort-label">Ordenar por:</label>
+                <select id="sortOrder" class="sort-select" aria-label="Ordenar lista">
+                  <option value="cercania">Cercanía (más cerca primero)</option>
+                  <option value="rating">Rating (más alto primero)</option>
+                  <option value="reviews">Cantidad de reseñas (más reseñas primero)</option>
+                </select>
+              </div>
+            </div>
+            <div class="skeleton-wrap" id="skeletonWrap">
+              <div class="skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line medium"></div></div>
+              <div class="skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line medium"></div></div>
+              <div class="skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line medium"></div></div>
+            </div>
+            <div id="resultsSection" class="results-list-wrap">
+              <div class="results-list" id="resultsList"></div>
+            </div>
+            <div class="state-wrap" id="emptyState">
+              <div class="illus">🏪</div>
+              <h3>Sin negocios cargados</h3>
+              <p>Elegí tu ubicación y tocá "Cargar negocios cercanos" para ver la lista.</p>
+            </div>
+            <div class="state-wrap" id="errorState">
+              <div class="illus">⚠️</div>
+              <h3>Algo falló</h3>
+              <p id="errorMessage">No se pudieron cargar los resultados.</p>
+              <button type="button" id="retryBtn">Reintentar</button>
+            </div>
+          </div>
+          <div class="list-panel-col-posibles">
+            <div class="posibles-clientes-wrap" id="posiblesClientesWrap">
+              <h3 class="posibles-title">Posibles clientes <span class="posibles-count" id="posiblesCount">0</span></h3>
+              <ul class="posibles-list" id="posiblesList"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Panel detalle al hacer clic en un negocio -->
+    <div class="detail-overlay" id="detailOverlay" aria-hidden="true">
+      <div class="detail-panel" id="detailPanel">
+        <button type="button" class="detail-close" id="detailClose" aria-label="Cerrar">×</button>
+        <div class="detail-content" id="detailContent"></div>
       </div>
-      <p class="location-status" id="locationStatus"></p>
-    </section>
-
-    <div class="barrio-wrap" id="barrioWrap" style="display: none;">
-      <label for="barrioSelect" class="barrio-label">Buscar en:</label>
-      <select id="barrioSelect" class="barrio-select" aria-label="Zona de búsqueda">
-        <option value="">Mi ubicación</option>
-        <option value="Agronomía, Buenos Aires">Agronomía</option>
-        <option value="Almagro, Buenos Aires">Almagro</option>
-        <option value="Balvanera, Buenos Aires">Balvanera</option>
-        <option value="Barracas, Buenos Aires">Barracas</option>
-        <option value="Belgrano, Buenos Aires">Belgrano</option>
-        <option value="Boca, Buenos Aires">La Boca</option>
-        <option value="Boedo, Buenos Aires">Boedo</option>
-        <option value="Caballito, Buenos Aires">Caballito</option>
-        <option value="Chacarita, Buenos Aires">Chacarita</option>
-        <option value="Coghlan, Buenos Aires">Coghlan</option>
-        <option value="Colegiales, Buenos Aires">Colegiales</option>
-        <option value="Constitución, Buenos Aires">Constitución</option>
-        <option value="Flores, Buenos Aires">Flores</option>
-        <option value="Floresta, Buenos Aires">Floresta</option>
-        <option value="La Paternal, Buenos Aires">La Paternal</option>
-        <option value="Liniers, Buenos Aires">Liniers</option>
-        <option value="Mataderos, Buenos Aires">Mataderos</option>
-        <option value="Monte Castro, Buenos Aires">Monte Castro</option>
-        <option value="Monserrat, Buenos Aires">Monserrat</option>
-        <option value="Nueva Pompeya, Buenos Aires">Nueva Pompeya</option>
-        <option value="Núñez, Buenos Aires">Núñez</option>
-        <option value="Palermo, Buenos Aires">Palermo</option>
-        <option value="Parque Avellaneda, Buenos Aires">Parque Avellaneda</option>
-        <option value="Parque Chacabuco, Buenos Aires">Parque Chacabuco</option>
-        <option value="Parque Chas, Buenos Aires">Parque Chas</option>
-        <option value="Parque Patricios, Buenos Aires">Parque Patricios</option>
-        <option value="Puerto Madero, Buenos Aires">Puerto Madero</option>
-        <option value="Recoleta, Buenos Aires">Recoleta</option>
-        <option value="Retiro, Buenos Aires">Retiro</option>
-        <option value="Saavedra, Buenos Aires">Saavedra</option>
-        <option value="San Cristóbal, Buenos Aires">San Cristóbal</option>
-        <option value="San Nicolás, Buenos Aires">San Nicolás</option>
-        <option value="San Telmo, Buenos Aires">San Telmo</option>
-        <option value="Vélez Sársfield, Buenos Aires">Vélez Sársfield</option>
-        <option value="Versalles, Buenos Aires">Versalles</option>
-        <option value="Villa Crespo, Buenos Aires">Villa Crespo</option>
-        <option value="Villa del Parque, Buenos Aires">Villa del Parque</option>
-        <option value="Villa Devoto, Buenos Aires">Villa Devoto</option>
-        <option value="Villa General Mitre, Buenos Aires">Villa General Mitre</option>
-        <option value="Villa Lugano, Buenos Aires">Villa Lugano</option>
-        <option value="Villa Luro, Buenos Aires">Villa Luro</option>
-        <option value="Villa Ortúzar, Buenos Aires">Villa Ortúzar</option>
-        <option value="Villa Pueyrredón, Buenos Aires">Villa Pueyrredón</option>
-        <option value="Villa Real, Buenos Aires">Villa Real</option>
-        <option value="Villa Riachuelo, Buenos Aires">Villa Riachuelo</option>
-        <option value="Villa Santa Rita, Buenos Aires">Villa Santa Rita</option>
-        <option value="Villa Urquiza, Buenos Aires">Villa Urquiza</option>
-      </select>
-    </div>
-
-    <div class="search-wrap">
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Ej: Chipa, Limonada, Café, Coca de Vidrio..." autocomplete="off" maxlength="100">
-        <button type="button" id="searchBtn" disabled>Buscar</button>
-      </div>
-    </div>
-
-    <section class="results-header" id="resultsHeader" style="display: none;">
-      <h2 id="resultsTitle"></h2>
-      <p class="price-summary" id="priceSummary"></p>
-    </section>
-
-    <div class="skeleton-wrap" id="skeletonWrap">
-      <div class="skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line"></div></div>
-      <div class="skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line"></div></div>
-      <div class="skeleton-card"><div class="skeleton-line"></div><div class="skeleton-line short"></div><div class="skeleton-line medium"></div><div class="skeleton-line"></div></div>
-    </div>
-
-    <section id="resultsSection">
-      <div class="results-grid" id="resultsGrid"></div>
-    </section>
-
-    <div class="state-wrap" id="emptyState">
-      <div class="illus">🍽️</div>
-      <h3>Nada por acá</h3>
-      <p>No encontramos lugares que mencionen este producto cerca tuyo. Probá con otro término o otra ubicación.</p>
-    </div>
-
-    <div class="state-wrap" id="errorState">
-      <div class="illus">⚠️</div>
-      <h3>Algo falló</h3>
-      <p id="errorMessage">No se pudieron cargar los resultados.</p>
-      <button type="button" id="retryBtn">Reintentar</button>
     </div>
   </div>
 
   <footer>
-    ¿Dónde Está? — Usa la API de Google Places. Ubicación y búsqueda en tu dispositivo.
+    Web Job Finder — Datos en tu dispositivo.
   </footer>
 
-  <!-- Orden de scripts: config → sanitize → api → search → ui → app -->
   <script src="js/config.js"></script>
   <script src="js/sanitize.js"></script>
   <script src="js/api.js"></script>

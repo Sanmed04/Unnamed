@@ -66,15 +66,22 @@
   }
 
   /**
-   * Comprueba que una URL sea segura para href (solo https).
-   * Evita javascript: y otros esquemas (OWASP: validación de URL).
+   * Comprueba que una URL sea segura para href (https o http; sin javascript: ni otros esquemas).
+   * Si viene sin protocolo (ej. www.ejemplo.com), se antepone https://.
    * @param {string} url
    * @returns {string} URL segura o '#' si no es válida
    */
   function sanitizeUrl(url) {
     if (url == null || typeof url !== 'string') return '#';
     const trimmed = url.trim();
-    if (trimmed.toLowerCase().indexOf('https://') === 0) return trimmed;
+    if (!trimmed) return '#';
+    const lower = trimmed.toLowerCase();
+    if (lower.indexOf('https://') === 0) return trimmed;
+    if (lower.indexOf('http://') === 0) return trimmed;
+    if (lower.indexOf('javascript:') === 0 || lower.indexOf('data:') === 0) return '#';
+    if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(\/|$)/i.test(trimmed) || trimmed.indexOf('www.') === 0) {
+      return (trimmed.indexOf('//') === -1 ? 'https://' + trimmed : 'https:' + trimmed);
+    }
     return '#';
   }
 

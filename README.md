@@ -1,6 +1,6 @@
-# ¿Dónde Está?
+# Web Job Finder
 
-Aplicación web de una sola página para encontrar comida y bebida cerca en tiempo real usando la API de Google Places y geolocalización.
+Aplicación web de una sola página para encontrar negocios cerca, filtrar por tipo y armar una lista de posibles clientes. Usa la API de Google Places y geolocalización.
 
 ## Estructura del proyecto
 
@@ -57,7 +57,7 @@ No se suben **.env** ni **js/config.js** (están en `.gitignore`). Solo se sube 
 ```bash
 git init
 git add .
-git commit -m "Initial commit: ¿Dónde Está?"
+git commit -m "Initial commit: Web Job Finder"
 git remote add origin https://github.com/Sanmed04/Unnamed.git
 git branch -M main
 git push -u origin main

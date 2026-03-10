@@ -1,7 +1,7 @@
 {
-  "name": "donde-esta",
+  "name": "web-job-finder",
   "version": "1.0.0",
-  "description": "¿Dónde Está? — Buscador de comida cerca tuyo",
+  "description": "Web Job Finder — Negocios cerca y lista de posibles clientes",
   "private": true,
   "scripts": {
     "config": "node scripts/inject-env.js",

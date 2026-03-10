@@ -1,5 +1,5 @@
 /**
- * Configuración de la aplicación ¿Dónde Está?
+ * Configuración de la aplicación Web Job Finder
  * Generado desde .env con: npm run config
  * No subir js/config.js a GitHub (contiene la API key).
  */
