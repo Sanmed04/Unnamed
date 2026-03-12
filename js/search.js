@@ -60,6 +60,29 @@
     return places.filter(function (p) { return placeMatchesCategory(p, categoryId); });
   }
 
+  /** Subcategorías (tipos) para una categoría. Devuelve [{ value, label }] para el select. */
+  function getSubcategoriesForCategory(categoryId) {
+    if (!categoryId || categoryId === 'all') return [];
+    var types = CATEGORY_TYPES[categoryId];
+    if (!types || !types.length) return [];
+    var out = [];
+    var seen = {};
+    types.forEach(function (t) {
+      if (seen[t]) return;
+      seen[t] = true;
+      out.push({ value: t, label: TYPE_LABELS[t] || t.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) });
+    });
+    return out;
+  }
+
+  function filterPlacesBySubcategory(places, subcategoryType) {
+    if (!subcategoryType || subcategoryType === 'all') return places;
+    return places.filter(function (p) {
+      var types = p.types || [];
+      return types.indexOf(subcategoryType) !== -1;
+    });
+  }
+
   function filterPlacesByPosiblesClientes(places, posiblesPlaceIds) {
     if (!posiblesPlaceIds || !posiblesPlaceIds.length) return places;
     var set = {};
@@ -618,6 +641,8 @@
     getAllowedTypesForCategory: getAllowedTypesForCategory,
     placeMatchesCategory: placeMatchesCategory,
     filterPlacesByCategory: filterPlacesByCategory,
+    getSubcategoriesForCategory: getSubcategoriesForCategory,
+    filterPlacesBySubcategory: filterPlacesBySubcategory,
     filterPlacesByPosiblesClientes: filterPlacesByPosiblesClientes,
     filterPlacesBySinWeb: filterPlacesBySinWeb,
     processResults: processResults,

@@ -114,7 +114,7 @@
         </div>
         <div class="filter-row" id="filterRow" style="display: none;">
           <label for="categoryFilter" class="filter-label">Categoría:</label>
-          <select id="categoryFilter" class="filter-select" aria-label="Filtrar por tipo de negocio">
+          <select id="categoryFilter" class="filter-select" aria-label="Filtrar por categoría">
             <option value="all">Todos los tipos</option>
             <option value="comida">Comida y bebida</option>
             <option value="compras">Compras</option>
@@ -124,6 +124,12 @@
             <option value="automotor">Automotor (lavado y reparación)</option>
             <option value="gym">Gimnasios</option>
           </select>
+          <span class="subcategory-filter-wrap" id="subcategoryFilterWrap" style="display: none;">
+            <label for="subcategoryFilter" class="filter-label">Subcategoría:</label>
+            <select id="subcategoryFilter" class="filter-select filter-select-subcategory" aria-label="Filtrar por subcategoría">
+              <option value="all">Todas</option>
+            </select>
+          </span>
           <label class="filter-checkbox-wrap">
             <input type="checkbox" id="filterPosiblesClientes" aria-label="Solo posibles clientes">
             <span>Solo posibles clientes</span>

@@ -357,6 +357,16 @@ body::before {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.subcategory-filter-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.subcategory-filter-wrap .filter-select {
+  min-width: 160px;
+}
+
 .filter-checkbox-wrap {
   display: inline-flex;
   align-items: center;

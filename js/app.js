@@ -327,6 +327,10 @@
     var filtered = currentPlacesFromNameSearch
       ? currentPlaces.slice()
       : SearchLogic.filterPlacesByCategory(currentPlaces, categoryId);
+    var subcategoryType = UI.getSubcategoryFilter();
+    if (categoryId && categoryId !== 'all' && subcategoryType && subcategoryType !== 'all') {
+      filtered = SearchLogic.filterPlacesBySubcategory(filtered, subcategoryType);
+    }
     if (onlyPosibles) filtered = SearchLogic.filterPlacesByPosiblesClientes(filtered, posiblesIds);
     if (onlySinWeb) filtered = SearchLogic.filterPlacesBySinWeb(filtered);
 
@@ -674,7 +678,21 @@
         if (e.target === detailOverlay) UI.hideDetailPanel();
       });
     }
-    if (categoryFilter) categoryFilter.addEventListener('change', applyFilters);
+    if (categoryFilter) {
+      categoryFilter.addEventListener('change', function () {
+        var categoryId = UI.getCategoryFilter();
+        if (categoryId === 'all') {
+          UI.setSubcategoryFilterVisible(false);
+        } else {
+          var opts = SearchLogic.getSubcategoriesForCategory(categoryId);
+          UI.setSubcategoryOptions(opts);
+          UI.setSubcategoryFilterVisible(true);
+        }
+        applyFilters();
+      });
+    }
+    var subcategoryFilter = UI.get('subcategoryFilter');
+    if (subcategoryFilter) subcategoryFilter.addEventListener('change', applyFilters);
     if (filterPosiblesClientes) filterPosiblesClientes.addEventListener('change', applyFilters);
     var filterSinWeb = UI.get('filterSinWeb');
     if (filterSinWeb) filterSinWeb.addEventListener('change', applyFilters);

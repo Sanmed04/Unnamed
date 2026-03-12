@@ -206,6 +206,34 @@
     return sel ? (sel.value || 'all') : 'all';
   }
 
+  function getSubcategoryFilter() {
+    var sel = get('subcategoryFilter');
+    return sel ? (sel.value || 'all') : 'all';
+  }
+
+  function setSubcategoryOptions(options) {
+    var sel = get('subcategoryFilter');
+    if (!sel) return;
+    var current = sel.value || 'all';
+    sel.innerHTML = '<option value="all">Todas</option>';
+    (options || []).forEach(function (opt) {
+      var o = document.createElement('option');
+      o.value = opt.value;
+      o.textContent = opt.label;
+      sel.appendChild(o);
+    });
+    if (current === 'all' || options.some(function (o) { return o.value === current; })) {
+      sel.value = current;
+    } else {
+      sel.value = 'all';
+    }
+  }
+
+  function setSubcategoryFilterVisible(visible) {
+    var wrap = get('subcategoryFilterWrap');
+    if (wrap) wrap.style.display = visible ? 'inline-flex' : 'none';
+  }
+
   function getOnlyPosiblesClientes() {
     var cb = get('filterPosiblesClientes');
     return cb ? cb.checked : false;
@@ -247,6 +275,9 @@
     updatePosiblesClientes: updatePosiblesClientes,
     setFilterRowVisible: setFilterRowVisible,
     getCategoryFilter: getCategoryFilter,
+    getSubcategoryFilter: getSubcategoryFilter,
+    setSubcategoryOptions: setSubcategoryOptions,
+    setSubcategoryFilterVisible: setSubcategoryFilterVisible,
     getOnlyPosiblesClientes: getOnlyPosiblesClientes,
     getOnlySinWeb: getOnlySinWeb,
     getSortOrder: getSortOrder
