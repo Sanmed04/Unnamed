@@ -12,6 +12,7 @@
   var currentPlaces = [];
   var currentPlacesFromNameSearch = false;
   var STORAGE_KEY = 'donde_esta_posibles_clientes';
+  var lastDetailDescription = '';
 
   var CONFIG = global.CONFIG || {};
   var Sanitize = global.Sanitize;
@@ -267,6 +268,7 @@
   }
 
   function openDetail(place) {
+    lastDetailDescription = '';
     var isPosible = isPosibleCliente(place.place_id);
     var currentNote = getNoteForPlace(place.place_id);
     var html = SearchLogic.buildDetailPanelContent(
@@ -305,6 +307,7 @@
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (!wrap.parentNode) return;
+            lastDetailDescription = data.description || '';
             wrap.innerHTML = data.description
               ? '<p class="detail-description">' + Sanitize.escapeHtml(data.description) + '</p>'
               : '<p class="detail-description-none">No hay descripción disponible.</p>';
@@ -312,6 +315,57 @@
           .catch(function () {
             if (wrap.parentNode) wrap.innerHTML = '<p class="detail-description-none">No se pudo cargar la descripción.</p>';
           });
+      }
+      var btnGenerar = document.getElementById('btnGenerarMensaje');
+      var messageWrap = document.getElementById('detailMessageWrap');
+      var messageInput = document.getElementById('detailMessageInput');
+      var btnCopiar = document.getElementById('btnCopiarMensaje');
+      if (btnGenerar && messageWrap && messageInput) {
+        btnGenerar.onclick = function () {
+          if (!lastDetailDescription) {
+            UI.showError('Esperá a que cargue la descripción del negocio.');
+            return;
+          }
+          messageWrap.style.display = 'block';
+          messageInput.value = '';
+          messageInput.placeholder = 'Generando mensaje…';
+          messageInput.disabled = true;
+          fetch('/api/custom-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ description: lastDetailDescription, businessName: place.name || '' })
+          }).then(function (r) { return r.json(); }).then(function (data) {
+            if (!messageInput.parentNode) return;
+            messageInput.disabled = false;
+            messageInput.placeholder = 'El mensaje aparecerá acá…';
+            messageInput.value = (data && data.message) ? data.message : '';
+          }).catch(function () {
+            if (messageInput.parentNode) {
+              messageInput.disabled = false;
+              messageInput.placeholder = 'El mensaje aparecerá acá…';
+              messageInput.value = '';
+              UI.showError('No se pudo generar el mensaje.');
+            }
+          });
+        };
+      }
+      if (btnCopiar && messageInput) {
+        btnCopiar.onclick = function () {
+          messageInput.select();
+          try {
+            document.execCommand('copy');
+            btnCopiar.textContent = '¡Copiado!';
+            setTimeout(function () { btnCopiar.textContent = 'Copiar'; }, 2000);
+          } catch (e) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(messageInput.value).then(function () {
+                btnCopiar.textContent = '¡Copiado!';
+                setTimeout(function () { btnCopiar.textContent = 'Copiar'; }, 2000);
+              });
+            }
+            else UI.showError('No se pudo copiar.');
+          }
+        };
       }
     });
   }

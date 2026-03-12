@@ -102,6 +102,61 @@ function serveDescriptionApi(placeId, res) {
   });
 }
 
+var hasGeminiKey = (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) ||
+  (process.env.GEMINI_API_KEYS && process.env.GEMINI_API_KEYS.trim());
+
+function serveCustomMessageApi(req, res) {
+  if (req.method !== 'POST') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: null }));
+    return;
+  }
+  if (!hasGeminiKey) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ message: null }));
+    return;
+  }
+  var body = [];
+  var limit = 50 * 1024;
+  req.on('data', function (chunk) {
+    body.push(chunk);
+    if (body.length > 1 || chunk.length > limit) {
+      req.destroy();
+      res.writeHead(413, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: null }));
+    }
+  });
+  req.on('end', function () {
+    var raw = Buffer.concat(body).toString('utf8');
+    var data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: null }));
+      return;
+    }
+    var description = typeof data.description === 'string' ? data.description.trim() : '';
+    var businessName = typeof data.businessName === 'string' ? data.businessName.trim() : '';
+    if (!description || description.length > 5000) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: null }));
+      return;
+    }
+    var mod = path.join(ROOT, 'scripts', 'placeDescription.mjs');
+    import(mod).then(function (m) {
+      return m.generateCustomMessage(description, businessName);
+    }).then(function (message) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: message || null }));
+    }).catch(function (err) {
+      console.error('Custom message API error:', err.message);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ message: null }));
+    });
+  });
+}
+
 const server = http.createServer((req, res) => {
   try {
     const fullUrl = req.url || '';
@@ -119,6 +174,11 @@ const server = http.createServer((req, res) => {
         if (eq !== -1) params[decodeURIComponent(pair.slice(0, eq)).trim()] = decodeURIComponent(pair.slice(eq + 1)).trim();
       });
       serveDescriptionApi(params.place_id, res);
+      return;
+    }
+
+    if (normalized === '/api/custom-message' || normalized === 'api/custom-message') {
+      serveCustomMessageApi(req, res);
       return;
     }
 

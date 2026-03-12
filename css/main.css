@@ -664,6 +664,14 @@ body::before {
   transition: transform var(--transition-slow);
 }
 
+@media (min-width: 1024px) {
+  .detail-panel {
+    max-width: 640px;
+    padding: 2.25rem;
+    max-height: 88vh;
+  }
+}
+
 .detail-overlay.open .detail-panel {
   transform: scale(1) translateY(0);
 }
@@ -774,6 +782,81 @@ body::before {
   color: var(--text-muted);
   font-style: italic;
   margin: 0;
+}
+
+.detail-message-section {
+  margin-bottom: 1.25rem;
+}
+
+.btn-generar-mensaje {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.btn-generar-mensaje:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.detail-message-wrap {
+  margin-top: 1rem;
+}
+
+.detail-message-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.detail-message-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  resize: vertical;
+  min-height: 100px;
+  margin-bottom: 0.5rem;
+  box-sizing: border-box;
+}
+
+.detail-message-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.btn-copiar-mensaje {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.btn-copiar-mensaje:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 .detail-line {

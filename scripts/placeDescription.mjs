@@ -224,6 +224,56 @@ ${dataJson}`;
   return textPart.trim();
 }
 
+/**
+ * Genera un mensaje personalizable para el negocio a partir de su descripción.
+ * Para mostrar en la app y que el usuario pueda editar (ej. contacto, propuesta).
+ */
+async function generateCustomMessage(description, businessName) {
+  if (!description || typeof description !== "string" || !description.trim()) {
+    throw new Error("Falta la descripción del negocio");
+  }
+  const name = (businessName && String(businessName).trim()) || "el negocio";
+  const apiKey = getNextGeminiKey();
+  if (!apiKey) throw new Error("Falta GEMINI_API_KEY o GEMINI_API_KEYS");
+
+  const prompt = `Sos un asistente que escribe mensajes cortos para contactar negocios.
+
+Te doy la descripción de un negocio. Generá un MENSAJE ÚNICO que alguien podría usar para escribirles (por WhatsApp, email, etc.). El mensaje debe:
+- Mencionar 1 o 2 aspectos concretos del negocio sacados de la descripción (tipo de lugar, especialidad, algo que los destaque).
+- Ser editable: tono profesional pero cercano, que el usuario pueda personalizarlo después.
+- Ser breve: entre 3 y 5 oraciones.
+- Estar en español rioplatense (Argentina).
+- No incluir saludo genérico tipo "Hola, les escribo..."; empezá directo con el contenido útil.
+- No inventes datos que no estén en la descripción.
+
+Nombre del negocio (para referencia): ${name}
+
+DESCRIPCIÓN DEL NEGOCIO:
+${description.trim().slice(0, 2000)}
+
+Respondé solo con el texto del mensaje, sin título ni explicaciones.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        maxOutputTokens: 350,
+        temperature: 0.5,
+      },
+    }),
+  });
+
+  const result = await res.json();
+  if (result.error) throw new Error(`Gemini API error: ${result.error.message}`);
+  const textPart = result.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!textPart) throw new Error("Gemini no devolvió texto");
+  return textPart.trim();
+}
+
 // ─── 4. PIPELINE PRINCIPAL ──────────────────────────────────────────────────
 
 async function getBusinessDescription(placeId, options) {
@@ -291,4 +341,4 @@ if (isMain) {
   });
 }
 
-export { getBusinessDescription, fetchPlaceData, extractRelevantData, generateDescription };
+export { getBusinessDescription, fetchPlaceData, extractRelevantData, generateDescription, generateCustomMessage };
