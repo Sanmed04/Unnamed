@@ -146,8 +146,8 @@
     } else if (sinWeb) {
       markerOpts.icon = {
         url: SIN_WEB_ICON_URL,
-        scaledSize: new google.maps.Size(36, 36),
-        anchor: new google.maps.Point(18, 36)
+        scaledSize: new google.maps.Size(28, 42),
+        anchor: new google.maps.Point(14, 42)
       };
     }
     var marker = new google.maps.Marker(markerOpts);
