@@ -17,7 +17,10 @@ Aplicación web de una sola página para encontrar negocios cerca, filtrar por t
 │   ├── ui.js
 │   └── app.js
 ├── server.js            # Sirve estáticos e inyecta GOOGLE_MAPS_API_KEY en /js/config.js
-└── scripts/inject-env.js
+└── scripts/
+    ├── inject-env.js
+    ├── placeDescription.mjs   # Descripción de un negocio con Gemini Flash Lite
+    └── batchDescriptions.mjs  # Lote de place_ids → results.json
 ```
 
 ## Configuración (no subir datos sensibles)
@@ -49,6 +52,19 @@ Se aplican prácticas alineadas con OWASP para reducir riesgos en el cliente:
 | **Cooldown de búsqueda** | `SEARCH_COOLDOWN_MS` en config para limitar frecuencia de llamadas a la API (mitigación básica de abuso). |
 
 No hay backend: todas las llamadas son desde el navegador a la API de Google. En producción se recomienda servir la app por **HTTPS**.
+
+## Descripciones de negocios con Gemini (opcional)
+
+Scripts para obtener datos de Google Place Details y generar una descripción corta con **Gemini 2.0 Flash Lite** (solo datos reales, sin inventar).
+
+- **Variables de entorno:** `GEMINI_API_KEY` (obligatorio). Para Places: `GOOGLE_PLACES_API_KEY` o `GOOGLE_MAPS_API_KEY`.
+- **Un solo lugar:**  
+  `node scripts/placeDescription.mjs <place_id>`
+- **Varios lugares:** Crear un JSON con array de `place_id` (strings o objetos `{ "place_id": "ChIJ..." }`) y ejecutar:  
+  `node scripts/batchDescriptions.mjs places.json`  
+  Los resultados se guardan en `results.json`.
+
+Gemini API key en [Google AI Studio](https://aistudio.google.com/apikey).
 
 ## Tecnologías
 
