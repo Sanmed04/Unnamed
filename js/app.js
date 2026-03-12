@@ -299,6 +299,20 @@
           openDetail(place);
         };
       }
+      var wrap = document.getElementById('detailDescriptionWrap');
+      if (wrap) {
+        fetch('/api/description?place_id=' + encodeURIComponent(place.place_id))
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (!wrap.parentNode) return;
+            wrap.innerHTML = data.description
+              ? '<p class="detail-description">' + Sanitize.escapeHtml(data.description) + '</p>'
+              : '<p class="detail-description-none">No hay descripción disponible.</p>';
+          })
+          .catch(function () {
+            if (wrap.parentNode) wrap.innerHTML = '<p class="detail-description-none">No se pudo cargar la descripción.</p>';
+          });
+      }
     });
   }
 

@@ -70,12 +70,55 @@ function serveStatic(filePath, res) {
   });
 }
 
+function serveDescriptionApi(placeId, res) {
+  if (!placeId || typeof placeId !== 'string') {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ description: null }));
+    return;
+  }
+  placeId = placeId.trim();
+  if (placeId.length < 10 || placeId.length > 200 || !/^[a-zA-Z0-9_-]+$/.test(placeId)) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ description: null }));
+    return;
+  }
+  if (!process.env.GEMINI_API_KEY) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ description: null }));
+    return;
+  }
+  const mod = path.join(ROOT, 'scripts', 'placeDescription.mjs');
+  import(mod).then(function (m) {
+    return m.getBusinessDescription(placeId, { silent: true });
+  }).then(function (out) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ description: out.description || null }));
+  }).catch(function (err) {
+    console.error('Description API error:', err.message);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ description: null }));
+  });
+}
+
 const server = http.createServer((req, res) => {
   try {
-    const url = (req.url || '').split('?')[0];
-    const pathname = url === '/' ? '/index.html' : url;
-    const normalized = path.normalize(pathname).replace(/^(\.\.(\/|\\|$))+/, '');
+    const fullUrl = req.url || '';
+    const question = fullUrl.indexOf('?');
+    const pathname = question === -1 ? fullUrl : fullUrl.slice(0, question);
+    const query = question === -1 ? '' : fullUrl.slice(question + 1);
+    const url = pathname === '/' ? '/index.html' : pathname;
+    const normalized = path.normalize(url).replace(/^(\.\.(\/|\\|$))+/, '');
     const filePath = path.resolve(ROOT, normalized.replace(/^\//, ''));
+
+    if (normalized === '/api/description' || normalized === 'api/description') {
+      const params = {};
+      query.split('&').forEach(function (pair) {
+        const eq = pair.indexOf('=');
+        if (eq !== -1) params[decodeURIComponent(pair.slice(0, eq)).trim()] = decodeURIComponent(pair.slice(eq + 1)).trim();
+      });
+      serveDescriptionApi(params.place_id, res);
+      return;
+    }
 
     if (normalized === 'js/config.js' || normalized === '/js/config.js') {
       serveConfig(res);

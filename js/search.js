@@ -323,6 +323,7 @@
       zoneHtml +
       detailRatingHtml +
       '<p class="detail-address">' + Sanitize.escapeHtml(place.vicinity) + '</p>' +
+      '<div class="detail-description-wrap" id="detailDescriptionWrap"><p class="detail-description-loading">Generando descripción…</p></div>' +
       phoneHtml +
       websiteBlock +
       '<div class="detail-posible-wrap">' + posibleBlock + '</div>' +

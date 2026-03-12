@@ -209,14 +209,18 @@ ${dataJson}`;
 
 // ─── 4. PIPELINE PRINCIPAL ──────────────────────────────────────────────────
 
-async function getBusinessDescription(placeId) {
-  console.log(`\n🔍 Consultando place_id: ${placeId}\n`);
+async function getBusinessDescription(placeId, options) {
+  const silent = options && options.silent === true;
+
+  if (!silent) console.log(`\n🔍 Consultando place_id: ${placeId}\n`);
 
   const raw = await fetchPlaceData(placeId);
   const extracted = extractRelevantData(raw);
 
-  console.log("📦 Datos extraídos:\n");
-  console.log(JSON.stringify(extracted, null, 2));
+  if (!silent) {
+    console.log("📦 Datos extraídos:\n");
+    console.log(JSON.stringify(extracted, null, 2));
+  }
 
   const hasEnoughData =
     extracted.nombre &&
@@ -227,16 +231,18 @@ async function getBusinessDescription(placeId) {
       extracted.descripcionEditorial);
 
   if (!hasEnoughData) {
-    console.warn("\n⚠️  Datos insuficientes para generar una descripción útil.");
+    if (!silent) console.warn("\n⚠️  Datos insuficientes para generar una descripción útil.");
     return { extracted, description: null };
   }
 
-  console.log("\n✍️  Generando descripción con Gemini...\n");
+  if (!silent) console.log("\n✍️  Generando descripción con Gemini...\n");
   const description = await generateDescription(extracted);
 
-  console.log("─".repeat(60));
-  console.log(description);
-  console.log("─".repeat(60));
+  if (!silent) {
+    console.log("─".repeat(60));
+    console.log(description);
+    console.log("─".repeat(60));
+  }
 
   return { extracted, description };
 }
