@@ -210,7 +210,7 @@
     svc.textSearch(request, callback);
   }
 
-  const DETAIL_FIELDS = ['name', 'vicinity', 'formatted_address', 'address_components', 'url', 'formatted_phone_number', 'international_phone_number', 'website', 'types', 'reviews', 'price_level', 'rating', 'user_ratings_total'];
+  const DETAIL_FIELDS = ['name', 'vicinity', 'formatted_address', 'address_components', 'url', 'formatted_phone_number', 'international_phone_number', 'website', 'types', 'reviews', 'price_level', 'rating', 'user_ratings_total', 'business_status'];
 
   /**
    * Obtiene detalles de un lugar por place_id.

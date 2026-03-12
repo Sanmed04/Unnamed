@@ -668,7 +668,7 @@
         lng: searchLng,
         radius: 2500,
         types: ['restaurant', 'cafe', 'store', 'bar', 'gym', 'bakery', 'pharmacy', 'hair_care', 'real_estate_agency'],
-        maxTotal: 100
+        maxTotal: 200
       },
       function (results, status) {
         if (status !== google.maps.places.PlacesServiceStatus.OK || !results || results.length === 0) {
@@ -681,24 +681,48 @@
           return;
         }
 
+        var batch1 = results.slice(0, 100);
+        var batch2 = results.length > 100 ? results.slice(100, 200) : [];
+
         SearchLogic.processNearbyResults({
-          results: results,
+          results: batch1,
           lat: searchLat,
           lng: searchLng
-        }).then(function (data) {
-          UI.showSkeleton(false);
-          var places = data.places.filter(function (p) {
+        }).then(function (data1) {
+          var places = (data1.places || []).filter(function (p) {
             return SearchLogic.placeMatchesCategory(p, 'all');
           });
           currentPlacesFromNameSearch = false;
           currentPlaces = places;
 
-          if (places.length === 0) {
+          if (places.length === 0 && batch2.length === 0) {
+            UI.showSkeleton(false);
             UI.showEmpty();
             return;
           }
 
           UI.setFilterRowVisible(true);
+          applyFilters();
+          UI.showSkeleton(false);
+
+          if (batch2.length === 0) return null;
+          return SearchLogic.processNearbyResults({
+            results: batch2,
+            lat: searchLat,
+            lng: searchLng
+          });
+        }).then(function (data2) {
+          if (!data2 || !data2.places || !data2.places.length) return;
+          var extra = data2.places.filter(function (p) {
+            return SearchLogic.placeMatchesCategory(p, 'all');
+          });
+          var seen = {};
+          currentPlaces.forEach(function (p) { seen[p.place_id] = true; });
+          extra = extra.filter(function (p) { return !seen[p.place_id]; });
+          if (extra.length === 0) return;
+          var combined = currentPlaces.concat(extra);
+          combined.sort(function (a, b) { return (a.distanceMeters || 0) - (b.distanceMeters || 0); });
+          currentPlaces = combined;
           applyFilters();
         }).catch(function () {
           UI.showSkeleton(false);

@@ -275,30 +275,34 @@
     var detailPromises = results.map(function (place) {
       return new Promise(function (resolve) {
         MapsApi.getPlaceDetails(place.place_id, function (detail, status) {
-          if (status === google.maps.places.PlacesServiceStatus.OK && detail) {
-            var loc = place.geometry && place.geometry.location;
-            var lat = loc ? (typeof loc.lat === 'function' ? loc.lat() : loc.lat) : userLat;
-            var lng = loc ? (typeof loc.lng === 'function' ? loc.lng() : loc.lng) : userLng;
-            var dist = distanceMeters(userLat, userLng, lat, lng);
-            var websiteRaw = (detail.website || detail.website_uri || '').trim();
-            var zone = getZoneFromAddressComponents(detail.address_components);
-            resolve({
-              place_id: place.place_id,
-              name: detail.name || place.name || '',
-              vicinity: detail.vicinity || detail.formatted_address || place.vicinity || 'Dirección no disponible',
-              zone: zone,
-              url: detail.url || place.url || '',
-              formatted_phone_number: (detail.formatted_phone_number || '').trim(),
-              website: websiteRaw,
-              types: detail.types || place.types || [],
-              geometry: place.geometry,
-              rating: detail.rating,
-              user_ratings_total: detail.user_ratings_total || 0,
-              distanceMeters: dist
-            });
-          } else {
+          if (status !== google.maps.places.PlacesServiceStatus.OK || !detail) {
             resolve(null);
+            return;
           }
+          if (detail.business_status === 'CLOSED_TEMPORARILY') {
+            resolve(null);
+            return;
+          }
+          var loc = place.geometry && place.geometry.location;
+          var lat = loc ? (typeof loc.lat === 'function' ? loc.lat() : loc.lat) : userLat;
+          var lng = loc ? (typeof loc.lng === 'function' ? loc.lng() : loc.lng) : userLng;
+          var dist = distanceMeters(userLat, userLng, lat, lng);
+          var websiteRaw = (detail.website || detail.website_uri || '').trim();
+          var zone = getZoneFromAddressComponents(detail.address_components);
+          resolve({
+            place_id: place.place_id,
+            name: detail.name || place.name || '',
+            vicinity: detail.vicinity || detail.formatted_address || place.vicinity || 'Dirección no disponible',
+            zone: zone,
+            url: detail.url || place.url || '',
+            formatted_phone_number: (detail.formatted_phone_number || '').trim(),
+            website: websiteRaw,
+            types: detail.types || place.types || [],
+            geometry: place.geometry,
+            rating: detail.rating,
+            user_ratings_total: detail.user_ratings_total || 0,
+            distanceMeters: dist
+          });
         });
       });
     });
@@ -447,11 +451,15 @@
     const detailPromises = results.map(function (place) {
       return new Promise(function (resolve) {
         MapsApi.getPlaceDetails(place.place_id, function (detail, status) {
-          if (status === google.maps.places.PlacesServiceStatus.OK && detail) {
-            resolve(detail);
-          } else {
+          if (status !== google.maps.places.PlacesServiceStatus.OK || !detail) {
             resolve(null);
+            return;
           }
+          if (detail.business_status === 'CLOSED_TEMPORARILY') {
+            resolve(null);
+            return;
+          }
+          resolve(detail);
         });
       });
     });
