@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "config": "node scripts/inject-env.js",
-    "dev": "npx serve . -l 3000",
-    "start": "npx serve . -l 3000"
+    "dev": "node server.js",
+    "start": "node server.js"
   }
 }

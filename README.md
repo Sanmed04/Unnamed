@@ -16,19 +16,21 @@ Aplicación web de una sola página para encontrar negocios cerca, filtrar por t
 │   ├── search.js
 │   ├── ui.js
 │   └── app.js
+├── server.js            # Sirve estáticos e inyecta GOOGLE_MAPS_API_KEY en /js/config.js
 └── scripts/inject-env.js
 ```
 
 ## Configuración (no subir datos sensibles)
 
-La API key va en **.env** (local). No subas `.env` ni `js/config.js` a GitHub.
+**Railway / producción:** Definí la variable de entorno `GOOGLE_MAPS_API_KEY` en el panel de Railway (o de tu host). El servidor (`node server.js`) sirve `/js/config.js` dinámicamente con esa key; no hace falta `config.js` ni `.env` en el servidor.
+
+**Local:** Poné la key en `.env` como `GOOGLE_MAPS_API_KEY=...` y ejecutá `npm run dev`. El servidor lee `.env` si existe.
 
 1. Clonar: `git clone https://github.com/Sanmed04/Unnamed.git && cd Unnamed`
-2. Copiar: `cp .env.example .env` y editar `.env` con tu `GOOGLE_MAPS_API_KEY=...`
-3. Generar config: `npm run config`
-4. Ejecutar: `npm run dev` → http://localhost:3000
+2. **Local:** `cp .env.example .env` y editar con tu key. **Railway:** agregar variable `GOOGLE_MAPS_API_KEY` en el proyecto.
+3. Ejecutar: `npm run dev` (local) o `npm start` (Railway usa `start` por defecto) → http://localhost:3000 o tu URL de Railway.
 
-API key en [Google Cloud Console](https://console.cloud.google.com/) (Clave de API, no OAuth), habilitar Maps JavaScript API y Places API.
+API key en [Google Cloud Console](https://console.cloud.google.com/) (Clave de API, no OAuth), habilitar Maps JavaScript API y Places API. En restricciones, agregar el dominio de Railway (ej. `https://tu-app.up.railway.app/*`).
 
 
 Se aplican prácticas alineadas con OWASP para reducir riesgos en el cliente:
