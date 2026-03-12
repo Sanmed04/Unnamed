@@ -22,7 +22,11 @@ Aplicación web de una sola página para encontrar negocios cerca, filtrar por t
 
 ## Configuración (no subir datos sensibles)
 
-**Railway / producción:** Definí la variable de entorno `GOOGLE_MAPS_API_KEY` en el panel de Railway (o de tu host). El servidor (`node server.js`) sirve `/js/config.js` dinámicamente con esa key; no hace falta `config.js` ni `.env` en el servidor.
+**Railway / producción:** En el proyecto de Railway → **Variables**, agregá:
+- `GOOGLE_MAPS_API_KEY` = tu clave de Google
+- `PORT` = **3000** (si en Public Networking el dominio apunta a “Port 3000”; tiene que coincidir con el puerto que muestra ahí)
+
+El servidor usa `process.env.PORT`; si Railway no inyecta PORT o usa otro valor, el proxy no puede conectar y la app “falla” sin error en logs. Que **PORT** coincida con el puerto del dominio.
 
 **Local:** Poné la key en `.env` como `GOOGLE_MAPS_API_KEY=...` y ejecutá `npm run dev`. El servidor lee `.env` si existe.
 
