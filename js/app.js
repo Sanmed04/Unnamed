@@ -12,12 +12,14 @@
   var currentPlaces = [];
   var currentPlacesFromNameSearch = false;
   var STORAGE_KEY = 'donde_esta_posibles_clientes';
+  var _posiblesClientesList = [];
 
   var CONFIG = global.CONFIG || {};
   var Sanitize = global.Sanitize;
   var MapsApi = global.MapsApi;
   var SearchLogic = global.SearchLogic;
   var UI = global.UI;
+  var AuthApi = global.AuthApi || { getToken: function () { return ''; } };
 
   function hasCoords() {
     return userLat != null && userLng != null;
@@ -32,27 +34,153 @@
     searchLng = lng;
   }
 
-  function getPosiblesClientes() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
+  function setPosiblesClientesList(list) {
+    _posiblesClientesList = Array.isArray(list) ? list : [];
+    if (!AuthApi.getToken()) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_posiblesClientesList)); } catch (e) {}
     }
   }
 
-  function savePosiblesClientes(list) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    } catch (e) {}
+  function getPosiblesClientes() {
+    return _posiblesClientesList;
   }
 
-  function addPosibleCliente(place) {
+  function savePosiblesClientes(list) {
+    _posiblesClientesList = Array.isArray(list) ? list : [];
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(_posiblesClientesList)); } catch (e) {}
+  }
+
+  function loadPosiblesClientes(callback) {
+    if (AuthApi.getToken()) {
+      AuthApi.getPosiblesClientesFromServer(function (err, list) {
+        if (err) setPosiblesClientesList([]);
+        else {
+          var normalized = (list || []).map(function (p) {
+            return {
+              place_id: p.place_id,
+              name: p.name,
+              address: p.address,
+              formatted_phone_number: p.formatted_phone_number || '',
+              hasWebsite: !!(p.website && p.website.trim()),
+              website: p.website || '',
+              note: p.note || '',
+              custom_message: p.custom_message || '',
+              place_description: p.place_description || '',
+              addedAt: p.addedAt || new Date().toISOString()
+            };
+          });
+          setPosiblesClientesList(normalized);
+        }
+        if (callback) callback();
+      });
+    } else {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        var arr = raw ? JSON.parse(raw) : [];
+        setPosiblesClientesList(Array.isArray(arr) ? arr : []);
+      } catch (e) { setPosiblesClientesList([]); }
+      if (callback) callback();
+    }
+  }
+
+  function refreshPosiblesClientesUI() {
+    UI.updatePosiblesClientes(getPosiblesClientes(), openDetailFromPosible);
+    renderPosiblesExtended();
+    if (currentPlaces.length) applyFilters();
+  }
+
+  function renderPosiblesExtended() {
     var list = getPosiblesClientes();
-    if (list.some(function (p) { return p.place_id === place.place_id; })) return;
-    list.push({
+    var container = document.getElementById('posiblesExtendedList');
+    var emptyEl = document.getElementById('posiblesExtendedEmpty');
+    var section = document.getElementById('posiblesExtendedSection');
+    if (!container || !emptyEl || !section) return;
+    if (list.length === 0) {
+      container.innerHTML = '';
+      emptyEl.style.display = 'block';
+      container.style.display = 'none';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    container.style.display = 'block';
+    container.innerHTML = '';
+    list.forEach(function (item) {
+      var card = document.createElement('div');
+      card.className = 'posibles-extended-card';
+      var nameEl = document.createElement('h3');
+      nameEl.className = 'posibles-extended-card-name';
+      nameEl.textContent = item.name || 'Sin nombre';
+      card.appendChild(nameEl);
+      if (item.place_description) {
+        var descLabel = document.createElement('p');
+        descLabel.className = 'posibles-extended-label';
+        descLabel.textContent = 'Descripción del lugar';
+        card.appendChild(descLabel);
+        var descEl = document.createElement('p');
+        descEl.className = 'posibles-extended-desc';
+        descEl.textContent = item.place_description;
+        card.appendChild(descEl);
+      }
+      if (item.custom_message) {
+        var msgLabel = document.createElement('p');
+        msgLabel.className = 'posibles-extended-label';
+        msgLabel.textContent = 'Mensaje personalizado';
+        card.appendChild(msgLabel);
+        var msgEl = document.createElement('p');
+        msgEl.className = 'posibles-extended-msg';
+        msgEl.textContent = item.custom_message;
+        card.appendChild(msgEl);
+      }
+      if (item.address) {
+        var addr = document.createElement('p');
+        addr.className = 'posibles-extended-meta';
+        addr.textContent = '📍 ' + item.address;
+        card.appendChild(addr);
+      }
+      if (item.formatted_phone_number) {
+        var tel = document.createElement('p');
+        tel.className = 'posibles-extended-meta';
+        var a = document.createElement('a');
+        a.href = 'tel:' + item.formatted_phone_number.replace(/[^\d+\-\s]/g, '').replace(/\s/g, '');
+        a.textContent = '📞 ' + item.formatted_phone_number;
+        tel.appendChild(a);
+        card.appendChild(tel);
+      }
+      if (item.website && item.website.trim()) {
+        var web = document.createElement('p');
+        web.className = 'posibles-extended-meta';
+        var link = document.createElement('a');
+        link.href = item.website.indexOf('http') === 0 ? item.website : 'https://' + item.website;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '🌐 Sitio web';
+        web.appendChild(link);
+        card.appendChild(web);
+      }
+      if (item.note) {
+        var noteLabel = document.createElement('p');
+        noteLabel.className = 'posibles-extended-label';
+        noteLabel.textContent = 'Tu nota';
+        card.appendChild(noteLabel);
+        var noteEl = document.createElement('p');
+        noteEl.className = 'posibles-extended-note';
+        noteEl.textContent = item.note;
+        card.appendChild(noteEl);
+      }
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-posibles-extended-detail';
+      btn.textContent = 'Ver detalle';
+      btn.addEventListener('click', function () { openDetailFromPosible(item); });
+      card.appendChild(btn);
+      container.appendChild(card);
+    });
+  }
+
+  function addPosibleCliente(place, customMessage) {
+    if (getPosiblesClientes().some(function (p) { return p.place_id === place.place_id; })) return;
+    var msg = typeof customMessage === 'string' ? customMessage.trim() : '';
+    var item = {
       place_id: place.place_id,
       name: place.name,
       address: place.vicinity,
@@ -60,18 +188,34 @@
       hasWebsite: !!(place.website && place.website.trim()),
       website: place.website || '',
       note: '',
+      custom_message: msg,
+      place_description: '',
       addedAt: new Date().toISOString()
-    });
-    savePosiblesClientes(list);
-    UI.updatePosiblesClientes(list, openDetailFromPosible);
-    if (currentPlaces.length) applyFilters();
+    };
+    if (AuthApi.getToken()) {
+      AuthApi.generatePlaceDescription(place, function (err, description) {
+        item.place_description = description || '';
+        AuthApi.addPosibleClienteToServer(item, function (errAdd) {
+          if (errAdd) { if (typeof UI.showError === 'function') UI.showError(errAdd.message || 'No se pudo agregar'); return; }
+          loadPosiblesClientes(function () { refreshPosiblesClientesUI(); });
+        });
+      });
+    } else {
+      setPosiblesClientesList(getPosiblesClientes().concat([item]));
+      refreshPosiblesClientesUI();
+    }
   }
 
   function removePosibleCliente(placeId) {
-    var list = getPosiblesClientes().filter(function (p) { return p.place_id !== placeId; });
-    savePosiblesClientes(list);
-    UI.updatePosiblesClientes(list, openDetailFromPosible);
-    if (currentPlaces.length) applyFilters();
+    if (AuthApi.getToken()) {
+      AuthApi.removePosibleClienteFromServer(placeId, function (err) {
+        if (err) return;
+        loadPosiblesClientes(function () { refreshPosiblesClientesUI(); });
+      });
+    } else {
+      setPosiblesClientesList(getPosiblesClientes().filter(function (p) { return p.place_id !== placeId; }));
+      refreshPosiblesClientesUI();
+    }
   }
 
   function getNoteForPlace(placeId) {
@@ -79,18 +223,65 @@
     return item && typeof item.note === 'string' ? item.note : '';
   }
 
+  function getCustomMessageForPlace(placeId) {
+    var item = getPosiblesClientes().filter(function (p) { return p.place_id === placeId; })[0];
+    return item && typeof item.custom_message === 'string' ? item.custom_message : '';
+  }
+
+  function updateCustomMessage(placeId, message) {
+    var list = getPosiblesClientes();
+    var msg = typeof message === 'string' ? message : '';
+    if (AuthApi.getToken()) {
+      AuthApi.updateCustomMessageOnServer(placeId, msg, getNoteForPlace(placeId), function (err) {
+        if (err) return;
+        var idx = list.findIndex(function (p) { return p.place_id === placeId; });
+        if (idx !== -1) {
+          var copy = list.slice();
+          copy[idx] = Object.assign({}, copy[idx], { custom_message: msg });
+          setPosiblesClientesList(copy);
+        }
+        refreshPosiblesClientesUI();
+      });
+    } else {
+      var updated = list.map(function (p) {
+        if (p.place_id === placeId) {
+          var out = {}; for (var k in p) out[k] = p[k];
+          out.custom_message = msg;
+          return out;
+        }
+        return p;
+      });
+      setPosiblesClientesList(updated);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch (e) {}
+      refreshPosiblesClientesUI();
+    }
+  }
+
   function updateNote(placeId, note) {
-    var list = getPosiblesClientes().map(function (p) {
-      if (p.place_id === placeId) {
-        var out = {};
-        for (var k in p) out[k] = p[k];
-        out.note = typeof note === 'string' ? note : '';
-        return out;
-      }
-      return p;
-    });
-    savePosiblesClientes(list);
-    UI.updatePosiblesClientes(list, openDetailFromPosible);
+    var list = getPosiblesClientes();
+    if (AuthApi.getToken()) {
+      AuthApi.updateNoteOnServer(placeId, note, function (err) {
+        if (err) return;
+        var idx = list.findIndex(function (p) { return p.place_id === placeId; });
+        if (idx !== -1) {
+          var copy = list.slice();
+          copy[idx] = Object.assign({}, copy[idx], { note: typeof note === 'string' ? note : '' });
+          setPosiblesClientesList(copy);
+        }
+        refreshPosiblesClientesUI();
+      });
+    } else {
+      var updated = list.map(function (p) {
+        if (p.place_id === placeId) {
+          var out = {}; for (var k in p) out[k] = p[k];
+          out.note = typeof note === 'string' ? note : '';
+          return out;
+        }
+        return p;
+      });
+      savePosiblesClientes(updated);
+      refreshPosiblesClientesUI();
+    }
   }
 
   function isPosibleCliente(placeId) {
@@ -269,12 +460,16 @@
   function openDetail(place) {
     var isPosible = isPosibleCliente(place.place_id);
     var currentNote = getNoteForPlace(place.place_id);
+    var currentCustomMessage = getCustomMessageForPlace(place.place_id);
+    var defaultPitch = SearchLogic.generatePitchMessage ? SearchLogic.generatePitchMessage(place) : '';
     var html = SearchLogic.buildDetailPanelContent(
       place,
       isPosible,
       currentNote,
-      function () {
-        addPosibleCliente(place);
+      currentCustomMessage,
+      defaultPitch,
+      function (customMessage) {
+        addPosibleCliente(place, customMessage);
         openDetail(place);
       },
       function () {
@@ -284,6 +479,10 @@
       function (note) {
         updateNote(place.place_id, note);
         openDetail(place);
+      },
+      function (message) {
+        updateCustomMessage(place.place_id, message);
+        openDetail(place);
       }
     );
     UI.showDetailPanel(html, function () {
@@ -291,11 +490,23 @@
       var btnUnmark = document.getElementById('btnUnmarkPosibleCliente');
       var btnSaveNote = document.getElementById('btnSaveNote');
       var noteInput = document.getElementById('detailNoteInput');
-      if (btnMark) btnMark.onclick = function () { addPosibleCliente(place); openDetail(place); };
+      var msgInput = document.getElementById('detailCustomMessageInput');
+      var btnSaveMsg = document.getElementById('btnSaveCustomMessage');
+      if (btnMark) btnMark.onclick = function () {
+        var msg = msgInput ? msgInput.value : '';
+        addPosibleCliente(place, msg);
+        openDetail(place);
+      };
       if (btnUnmark) btnUnmark.onclick = function () { removePosibleCliente(place.place_id); openDetail(place); };
       if (btnSaveNote && noteInput) {
         btnSaveNote.onclick = function () {
           updateNote(place.place_id, noteInput.value || '');
+          openDetail(place);
+        };
+      }
+      if (btnSaveMsg && msgInput) {
+        btnSaveMsg.onclick = function () {
+          updateCustomMessage(place.place_id, msgInput.value || '');
           openDetail(place);
         };
       }
@@ -465,6 +676,101 @@
     if (sortOrder) sortOrder.addEventListener('change', applyFilters);
   }
 
+  function refreshAuthUI() {
+    var token = AuthApi.getToken();
+    var guestEl = document.getElementById('authGuest');
+    var userEl = document.getElementById('authUser');
+    var emailEl = document.getElementById('authUserEmail');
+    if (guestEl) guestEl.style.display = token ? 'none' : '';
+    if (userEl) userEl.style.display = token ? 'flex' : 'none';
+    if (emailEl && token) {
+      var u = AuthApi.getStoredUser();
+      emailEl.textContent = u && u.email ? u.email : '';
+    }
+  }
+
+  function openAuthModal() {
+    var overlay = document.getElementById('authOverlay');
+    if (overlay) { overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); }
+    document.getElementById('authErrorLogin').textContent = '';
+    document.getElementById('authErrorRegister').textContent = '';
+    var tabLogin = document.getElementById('authTabLogin');
+    var tabReg = document.getElementById('authTabRegister');
+    if (tabLogin) tabLogin.classList.add('active');
+    if (tabReg) tabReg.classList.remove('active');
+    document.getElementById('authFormLogin').style.display = '';
+    document.getElementById('authFormRegister').style.display = 'none';
+  }
+
+  function closeAuthModal() {
+    var overlay = document.getElementById('authOverlay');
+    if (overlay) { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); }
+  }
+
+  function bindAuthEvents() {
+    var loginBtn = document.getElementById('authLoginBtn');
+    var logoutBtn = document.getElementById('authLogoutBtn');
+    var modalClose = document.getElementById('authModalClose');
+    var authOverlay = document.getElementById('authOverlay');
+    var tabLogin = document.getElementById('authTabLogin');
+    var tabReg = document.getElementById('authTabRegister');
+    var formLogin = document.getElementById('authFormLogin');
+    var formReg = document.getElementById('authFormRegister');
+    var errLogin = document.getElementById('authErrorLogin');
+    var errReg = document.getElementById('authErrorRegister');
+
+    if (loginBtn) loginBtn.addEventListener('click', openAuthModal);
+    if (logoutBtn) logoutBtn.addEventListener('click', function () {
+      AuthApi.logout();
+      loadPosiblesClientes(function () {
+        refreshAuthUI();
+        refreshPosiblesClientesUI();
+      });
+    });
+    if (modalClose) modalClose.addEventListener('click', closeAuthModal);
+    if (authOverlay) authOverlay.addEventListener('click', function (e) { if (e.target === authOverlay) closeAuthModal(); });
+
+    function showTab(tab) {
+      if (tab === 'login') {
+        if (tabLogin) tabLogin.classList.add('active'); if (tabReg) tabReg.classList.remove('active');
+        if (formLogin) formLogin.style.display = ''; if (formReg) formReg.style.display = 'none';
+        if (errLogin) errLogin.textContent = ''; if (errReg) errReg.textContent = '';
+      } else {
+        if (tabReg) tabReg.classList.add('active'); if (tabLogin) tabLogin.classList.remove('active');
+        if (formReg) formReg.style.display = ''; if (formLogin) formLogin.style.display = 'none';
+      }
+    }
+    if (tabLogin) tabLogin.addEventListener('click', function () { showTab('login'); });
+    if (tabReg) tabReg.addEventListener('click', function () { showTab('register'); });
+
+    if (formLogin) formLogin.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = (document.getElementById('authEmailLogin').value || '').trim();
+      var password = document.getElementById('authPasswordLogin').value || '';
+      if (errLogin) errLogin.textContent = '';
+      AuthApi.login(email, password, function (err, user) {
+        if (err) { if (errLogin) errLogin.textContent = err.message || 'Error al iniciar sesión'; return; }
+        closeAuthModal();
+        refreshAuthUI();
+        loadPosiblesClientes(function () { refreshPosiblesClientesUI(); });
+      });
+    });
+
+    if (formReg) formReg.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = (document.getElementById('authEmailRegister').value || '').trim();
+      var password = document.getElementById('authPasswordRegister').value || '';
+      if (errReg) errReg.textContent = '';
+      if (password.length < 6) { if (errReg) errReg.textContent = 'La contraseña debe tener al menos 6 caracteres'; return; }
+      AuthApi.register(email, password, function (err, user) {
+        if (err) { if (errReg) errReg.textContent = err.message || 'Error al registrarse'; return; }
+        closeAuthModal();
+        refreshAuthUI();
+        loadPosiblesClientes(function () { refreshPosiblesClientesUI(); });
+      });
+    });
+  }
+
   function initMap() {
     var mapContainer = UI.get('mapContainer');
     if (!MapsApi.initServices(mapContainer)) {
@@ -473,7 +779,11 @@
     }
     requestLocation();
     bindEvents();
-    UI.updatePosiblesClientes(getPosiblesClientes(), openDetailFromPosible);
+    bindAuthEvents();
+    refreshAuthUI();
+    loadPosiblesClientes(function () {
+      UI.updatePosiblesClientes(getPosiblesClientes(), openDetailFromPosible);
+    });
   }
 
   function bootstrap() {

@@ -30,8 +30,11 @@ function parseEnv(content) {
 let env = {};
 if (fs.existsSync(envPath)) {
   env = parseEnv(fs.readFileSync(envPath, 'utf8'));
-} else {
-  console.warn('No existe .env. Copiá .env.example a .env y poné tu GOOGLE_MAPS_API_KEY.');
+}
+// En Railway/entornos cloud las variables vienen por process.env
+if (process.env.GOOGLE_MAPS_API_KEY) env.GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+if (!env.GOOGLE_MAPS_API_KEY && !process.env.GOOGLE_MAPS_API_KEY) {
+  console.warn('No existe .env o GOOGLE_MAPS_API_KEY. Copiá .env.example a .env o configurá la variable.');
 }
 
 let template = fs.readFileSync(templatePath, 'utf8');

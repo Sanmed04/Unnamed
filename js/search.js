@@ -145,6 +145,49 @@
     return 'Negocio';
   }
 
+  /**
+   * Genera un mensaje de oferta de servicio (páginas web) personalizado según el tipo de negocio.
+   * Objetivo: vender nuestro servicio explicando cómo una web puede ayudar a ese negocio.
+   */
+  function generatePitchMessage(place) {
+    var name = (place.name || '').trim() || 'el negocio';
+    var typeLabel = getPlaceTypeLabel(place);
+    var hasWeb = !!(place.website && place.website.trim());
+    var types = place.types || [];
+    var firstType = types[0] || '';
+
+    var intro = 'Hola';
+    if (name && name !== 'Sin nombre') intro += ', ' + name;
+    intro += '. ';
+
+    var byType = '';
+    if (firstType === 'restaurant' || firstType === 'cafe' || firstType === 'bar' || firstType === 'food' || firstType === 'bakery' || firstType === 'meal_delivery' || firstType === 'meal_takeaway') {
+      byType = 'Una página web permite que más gente encuentre tu ' + (typeLabel.toLowerCase()) + ', vea la carta o el menú, los horarios y hasta reserve o pida delivery. ';
+    } else if (firstType === 'store' || firstType === 'supermarket' || firstType === 'clothing_store' || firstType === 'grocery_store' || firstType === 'convenience_store' || firstType === 'florist' || firstType === 'book_store' || firstType === 'pet_store' || firstType === 'furniture_store' || firstType === 'electronics_store') {
+      byType = 'Con un sitio web tu ' + (typeLabel.toLowerCase()) + ' puede mostrarse en Google, mostrar productos, horarios y promociones, y llegar a más clientes de la zona. ';
+    } else if (firstType === 'gym' || firstType === 'fitness_center') {
+      byType = 'Una web para tu gimnasio ayuda a mostrar clases, horarios, planes y a que nuevos socios se inscriban o consulten. ';
+    } else if (firstType === 'hotel' || firstType === 'lodging') {
+      byType = 'Un sitio web profesional hace que tu alojamiento se vea confiable, muestre habitaciones y precios, y facilite reservas. ';
+    } else if (firstType === 'beauty_salon' || firstType === 'hair_care' || firstType === 'barber_shop') {
+      byType = 'Una página web para tu salón o peluquería permite mostrar servicios, precios y que los clientes reserven turno. ';
+    } else if (firstType === 'car_wash' || firstType === 'car_repair') {
+      byType = 'Una web para tu negocio automotor ayuda a que te encuentren en Google, vean servicios y precios y te contacten fácil. ';
+    } else if (firstType === 'pharmacy' || firstType === 'doctor' || firstType === 'dentist' || firstType === 'veterinary_care') {
+      byType = 'Un sitio web da credibilidad y permite que los pacientes vean horarios, servicios y formas de contacto. ';
+    } else {
+      byType = 'Una página web profesional ayuda a que más clientes te encuentren en Google, conozcan tu negocio y te contacten. ';
+    }
+
+    var offer = 'Nos dedicamos a crear páginas web para negocios como el tuyo: modernas, rápidas y pensadas para sumar clientes. ';
+    if (hasWeb) {
+      offer = 'Si querés mejorar tu presencia online o renovar tu sitio, podemos ayudarte. ';
+    }
+    var cta = '¿Te gustaría que te contemos cómo podemos ayudarte?';
+
+    return intro + byType + offer + cta;
+  }
+
   /** Si el website es Instagram, devuelve la URL segura; si no, null. */
   function getInstagramUrl(place) {
     var w = (place.website || '').trim().toLowerCase();
@@ -245,7 +288,18 @@
   }
 
   /**
-   * Construye una fila de la lista (nombre + distancia). Al hacer clic se llama onSelect(place).
+   * Clasificación por cantidad de reseñas: muy buen candidato (&lt;200), posible (&lt;1000), mal candidato (≥1000).
+   * @returns {{ label: string, className: string }}
+   */
+  function getCandidateByReviews(totalReviews) {
+    var n = totalReviews != null ? totalReviews : 0;
+    if (n < 200) return { label: 'Muy buen candidato', className: 'list-card-candidate list-card-candidate-good' };
+    if (n < 1000) return { label: 'Posible candidato', className: 'list-card-candidate list-card-candidate-possible' };
+    return { label: 'Mal candidato', className: 'list-card-candidate list-card-candidate-bad' };
+  }
+
+  /**
+   * Construye una fila de la lista (nombre + distancia + candidato). Al hacer clic se llama onSelect(place).
    */
   function buildListCard(place, index, onSelect) {
     var row = document.createElement('div');
@@ -257,11 +311,14 @@
     var totalReviews = place.user_ratings_total != null ? place.user_ratings_total : 0;
     var reviewsStr = totalReviews === 0 ? 'Sin reseñas' : totalReviews + ' reseña' + (totalReviews !== 1 ? 's' : '');
     var typeLabel = getPlaceTypeLabel(place);
+    var candidate = getCandidateByReviews(totalReviews);
     var zoneHtml = (place.zone && place.zone.trim()) ? '<div class="list-card-zone">' + Sanitize.escapeHtml(place.zone) + '</div>' : '';
+    var candidateHtml = '<span class="' + candidate.className + '">' + Sanitize.escapeHtml(candidate.label) + '</span>';
     row.innerHTML =
       '<div class="list-card-name">' + Sanitize.escapeHtml(place.name) + '</div>' +
       '<div class="list-card-type">' + Sanitize.escapeHtml(typeLabel) + '</div>' +
       zoneHtml +
+      '<div class="list-card-candidate-wrap">' + candidateHtml + '</div>' +
       '<div class="list-card-meta">' +
       '<span class="list-card-rating">⭐ ' + Sanitize.escapeHtml(rating) + '</span>' +
       '<span class="list-card-reviews">' + Sanitize.escapeHtml(reviewsStr) + '</span>' +
@@ -272,9 +329,11 @@
   }
 
   /**
-   * Genera el HTML del panel de detalle: teléfono, sitio web, botón marcar/quitar posible cliente, nota.
+   * Genera el HTML del panel de detalle: teléfono, sitio web, mensaje para el cliente, botón marcar/quitar posible cliente, nota.
+   * currentCustomMessage: mensaje personalizado guardado (si ya es posible cliente) o null.
+   * defaultPitch: mensaje generado por tipo de negocio para prellenar al marcar como posible cliente.
    */
-  function buildDetailPanelContent(place, isPosibleCliente, currentNote, onMarkPosibleCliente, onUnmarkPosibleCliente, onSaveNote) {
+  function buildDetailPanelContent(place, isPosibleCliente, currentNote, currentCustomMessage, defaultPitch, onMarkPosibleCliente, onUnmarkPosibleCliente, onSaveNote, onSaveCustomMessage) {
     var phoneHtml = (place.formatted_phone_number)
       ? (function () {
           var raw = place.formatted_phone_number;
@@ -301,6 +360,17 @@
       websiteBlock = '<p class="detail-line detail-no-web">No tiene sitio web</p>';
     }
 
+    var messageBlock = '';
+    if (isPosibleCliente) {
+      messageBlock = '<div class="detail-message-wrap"><label for="detailCustomMessageInput" class="detail-note-label">Mensaje para el cliente</label>' +
+        '<textarea id="detailCustomMessageInput" class="detail-note-input detail-message-input" rows="5" placeholder="Mensaje de oferta de tu servicio..." maxlength="2000">' + Sanitize.escapeHtml(currentCustomMessage || '') + '</textarea>' +
+        '<button type="button" class="btn-guardar-nota" id="btnSaveCustomMessage">Guardar mensaje</button></div>';
+    } else {
+      messageBlock = '<div class="detail-message-wrap"><label for="detailCustomMessageInput" class="detail-note-label">Mensaje para el cliente</label>' +
+        '<textarea id="detailCustomMessageInput" class="detail-note-input detail-message-input" rows="5" placeholder="Mensaje de oferta de tu servicio..." maxlength="2000">' + Sanitize.escapeHtml(defaultPitch || '') + '</textarea>' +
+        '<p class="detail-message-hint">Podés editarlo antes de guardar. Se usará para ofrecer tu servicio a este negocio.</p></div>';
+    }
+
     var posibleBlock = '';
     if (isPosibleCliente) {
       posibleBlock = '<p class="detail-posible-label">✓ En tu lista de posibles clientes</p>' +
@@ -325,7 +395,7 @@
       '<p class="detail-address">' + Sanitize.escapeHtml(place.vicinity) + '</p>' +
       phoneHtml +
       websiteBlock +
-      '<div class="detail-posible-wrap">' + posibleBlock + '</div>' +
+      '<div class="detail-posible-wrap">' + messageBlock + posibleBlock + '</div>' +
       '<a class="detail-maps-link" href="' + Sanitize.escapeHtml(safeUrl) + '" target="_blank" rel="noopener noreferrer">Ver en Google Maps</a>'
     );
   }
@@ -547,6 +617,7 @@
     buildCard: buildCard,
     buildListCard: buildListCard,
     buildDetailPanelContent: buildDetailPanelContent,
+    generatePitchMessage: generatePitchMessage,
     formatDistance: formatDistance
   };
 })(typeof window !== 'undefined' ? window : this);

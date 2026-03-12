@@ -34,6 +34,16 @@
       <h1>Web Job Finder</h1>
       <p class="subtitle">Encontrá negocios cerca y armá tu lista de posibles clientes</p>
 
+      <div class="auth-wrap" id="authWrap">
+        <div class="auth-guest" id="authGuest">
+          <button type="button" class="btn-auth" id="authLoginBtn">Iniciar sesión</button>
+        </div>
+        <div class="auth-user" id="authUser" style="display: none;">
+          <span class="auth-email" id="authUserEmail"></span>
+          <button type="button" class="btn-auth btn-auth-outline" id="authLogoutBtn">Cerrar sesión</button>
+        </div>
+      </div>
+
       <section class="location-section" id="locationSection">
         <p id="locationMessage">Permití el acceso a tu ubicación para cargar negocios.</p>
         <div class="fallback-row" id="fallbackRow" style="display: none;">
@@ -177,6 +187,41 @@
       </section>
     </div>
 
+    <!-- Vista extendida: posibles clientes (descripción, mensaje, todos los datos) -->
+    <section class="posibles-extended-section" id="posiblesExtendedSection">
+      <h2 class="posibles-extended-title">Vista extendida — Posibles clientes</h2>
+      <p class="posibles-extended-intro">Descripción del lugar (Gemini), mensaje personalizado y datos de contacto guardados en tu cuenta.</p>
+      <div class="posibles-extended-list" id="posiblesExtendedList"></div>
+      <div class="posibles-extended-empty" id="posiblesExtendedEmpty">
+        <p>Aún no tenés posibles clientes. Marcá negocios como posibles clientes para verlos acá con su descripción y mensaje.</p>
+      </div>
+    </section>
+
+    <!-- Modal login / registro -->
+    <div class="auth-overlay" id="authOverlay" aria-hidden="true">
+      <div class="auth-modal" id="authModal">
+        <button type="button" class="auth-modal-close" id="authModalClose" aria-label="Cerrar">×</button>
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab active" data-tab="login" id="authTabLogin">Iniciar sesión</button>
+          <button type="button" class="auth-tab" data-tab="register" id="authTabRegister">Registrarse</button>
+        </div>
+        <div class="auth-form-wrap">
+          <form class="auth-form" id="authFormLogin" data-mode="login">
+            <input type="email" id="authEmailLogin" placeholder="Email" required autocomplete="email">
+            <input type="password" id="authPasswordLogin" placeholder="Contraseña" required autocomplete="current-password">
+            <p class="auth-error" id="authErrorLogin"></p>
+            <button type="submit" class="btn-auth btn-auth-block">Entrar</button>
+          </form>
+          <form class="auth-form" id="authFormRegister" data-mode="register" style="display: none;">
+            <input type="email" id="authEmailRegister" placeholder="Email" required autocomplete="email">
+            <input type="password" id="authPasswordRegister" placeholder="Contraseña (mín. 6 caracteres)" required minlength="6" autocomplete="new-password">
+            <p class="auth-error" id="authErrorRegister"></p>
+            <button type="submit" class="btn-auth btn-auth-block">Crear cuenta</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <!-- Panel detalle al hacer clic en un negocio -->
     <div class="detail-overlay" id="detailOverlay" aria-hidden="true">
       <div class="detail-panel" id="detailPanel">
@@ -229,6 +274,7 @@
   </script>
   <script src="js/config.js"></script>
   <script src="js/sanitize.js"></script>
+  <script src="js/auth-api.js"></script>
   <script src="js/api.js"></script>
   <script src="js/search.js"></script>
   <script src="js/ui.js"></script>

@@ -6,29 +6,34 @@ Aplicación web de una sola página para encontrar negocios cerca, filtrar por t
 
 ```
 ├── index.html
-├── .env.example        # Copiar a .env (no subir .env a GitHub)
-├── .gitignore
-├── css/main.css
+├── server/              # Backend Express + SQLite
+│   ├── index.js        # Servidor (API + estáticos)
+│   ├── db.js           # SQLite (users, posibles_clientes)
+│   ├── auth.js         # Registro, login, JWT
+│   └── posiblesClientes.js
 ├── js/
-│   ├── config.template.js   # js/config.js se genera con npm run config
-│   ├── sanitize.js
-│   ├── api.js
-│   ├── search.js
-│   ├── ui.js
-│   └── app.js
+│   ├── auth-api.js     # Cliente API auth y posibles clientes
+│   ├── config.js       # Generado con npm run config
+│   └── ...
+├── .env.example
 └── scripts/inject-env.js
 ```
 
 ## Configuración (no subir datos sensibles)
 
-La API key va en **.env** (local). No subas `.env` ni `js/config.js` a GitHub.
+Variables en **.env** (no subir a GitHub):
 
-1. Clonar: `git clone https://github.com/Sanmed04/Unnamed.git && cd Unnamed`
-2. Copiar: `cp .env.example .env` y editar `.env` con tu `GOOGLE_MAPS_API_KEY=...`
-3. Generar config: `npm run config`
-4. Ejecutar: `npm run dev` → http://localhost:3000
+- `GOOGLE_MAPS_API_KEY`: clave de Google Maps/Places
+- `JWT_SECRET`: clave secreta para los tokens de sesión (backend)
+- `PORT`: opcional en local (default 3000); Railway lo define automáticamente
 
-API key en [Google Cloud Console](https://console.cloud.google.com/) (Clave de API, no OAuth), habilitar Maps JavaScript API y Places API.
+1. Clonar: `git clone ... && cd Unnamed`
+2. Copiar: `cp .env.example .env` y completar las variables
+3. Generar config del front: `npm run config`
+4. Instalar dependencias: `npm install` (o `pnpm install`)
+5. Ejecutar: `npm start` → http://localhost:3000 (servidor Express sirve la app y la API)
+
+API key en [Google Cloud Console](https://console.cloud.google.com/): habilitar Maps JavaScript API y Places API.
 
 
 Se aplican prácticas alineadas con OWASP para reducir riesgos en el cliente:
@@ -42,7 +47,18 @@ Se aplican prácticas alineadas con OWASP para reducir riesgos en el cliente:
 | **API key** | Key solo en `.env` (no se sube). `js/config.js` se genera con `npm run config` y está en `.gitignore`. Restringir la key por referrer y por API en Cloud Console. |
 | **Cooldown de búsqueda** | `SEARCH_COOLDOWN_MS` en config para limitar frecuencia de llamadas a la API (mitigación básica de abuso). |
 
-No hay backend: todas las llamadas son desde el navegador a la API de Google. En producción se recomienda servir la app por **HTTPS**.
+El **backend** (Express + SQLite) permite registrar usuarios y guardar la lista de posibles clientes por cuenta; así, al iniciar sesión desde otro dispositivo se ven los mismos datos. En producción servir por **HTTPS**.
+
+### Despliegue en Railway
+
+1. Conectar el repo desde [Railway](https://railway.app/).
+2. **Variables de entorno** en el proyecto:
+   - `GOOGLE_MAPS_API_KEY`: tu clave de Google Maps/Places.
+   - `JWT_SECRET`: una clave larga y aleatoria para las sesiones.
+   - Railway define `PORT` automáticamente.
+3. **Build**: en Railway, configurar el comando de build como `npm run config` para generar `js/config.js` con la API key (las variables de entorno están disponibles en el build).
+4. **Start**: `npm start` (ya en `package.json`).
+5. **Persistencia**: la base SQLite usa el disco del servicio (efímero por defecto). Para que no se pierda al redesplegar, añadí un **volume** en Railway y la variable `SQLITE_DB_PATH` apuntando a una ruta en ese volume (ej. `/data/wjf.db`).
 
 ## Tecnologías
 

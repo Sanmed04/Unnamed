@@ -5,7 +5,13 @@
   "private": true,
   "scripts": {
     "config": "node scripts/inject-env.js",
-    "dev": "npx serve . -l 3000",
-    "start": "npx serve . -l 3000"
+    "dev": "node server/index.js",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.6.0",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2"
   }
 }

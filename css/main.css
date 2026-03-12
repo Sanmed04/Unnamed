@@ -621,6 +621,33 @@ body::before {
   color: var(--text-muted);
 }
 
+.list-card-candidate-wrap {
+  margin-top: 0.35rem;
+}
+
+.list-card-candidate {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.list-card-candidate-good {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.list-card-candidate-possible {
+  background: rgba(234, 179, 8, 0.2);
+  color: #a16207;
+}
+
+.list-card-candidate-bad {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
 /* ========================================
    DETAIL PANEL (OVERLAY)
    ======================================== */
@@ -844,6 +871,21 @@ body::before {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.detail-message-wrap {
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.detail-message-input {
+  min-height: 100px;
+}
+
+.detail-message-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
 }
 
 .btn-guardar-nota {
@@ -1480,6 +1522,280 @@ h1 {
 #emptyState.visible,
 #errorState.visible {
   display: block;
+}
+
+/* ========================================
+   VISTA EXTENDIDA — POSIBLES CLIENTES
+   ======================================== */
+.posibles-extended-section {
+  padding: 1.5rem 1rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.posibles-extended-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+
+.posibles-extended-intro {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.posibles-extended-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.posibles-extended-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.posibles-extended-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.posibles-extended-card-name {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.posibles-extended-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin: 0 0 0.2rem 0;
+}
+
+.posibles-extended-desc,
+.posibles-extended-msg {
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.posibles-extended-meta {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.posibles-extended-meta a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.posibles-extended-meta a:hover {
+  text-decoration: underline;
+}
+
+.posibles-extended-note {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.btn-posibles-extended-detail {
+  margin-top: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.2s;
+}
+
+.btn-posibles-extended-detail:hover {
+  background: var(--accent-hover);
+}
+
+/* ========================================
+   AUTH (login / registro)
+   ======================================== */
+.auth-wrap {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.auth-guest .btn-auth,
+.auth-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.auth-email {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.btn-auth {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-auth:hover {
+  background: var(--accent-hover);
+}
+
+.btn-auth-outline {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.btn-auth-outline:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.btn-auth-block {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.5);
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
+}
+
+.auth-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.auth-modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 360px;
+  position: relative;
+}
+
+.auth-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--bg);
+  border-radius: 50%;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.auth-modal-close:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.auth-tab:hover {
+  color: var(--text);
+}
+
+.auth-tab.active {
+  background: var(--accent);
+  color: white;
+}
+
+.auth-form input {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.auth-error {
+  font-size: 0.85rem;
+  color: var(--error, #c62828);
+  margin-bottom: 0.5rem;
+  min-height: 1.2em;
 }
 
 /* ========================================

@@ -1,6 +1,12 @@
 # Datos sensibles (nunca subir)
 .env
 
+# Base de datos SQLite (local)
+data/
+*.db
+*.db-wal
+*.db-shm
+
 # Config generado desde .env (contiene la API key)
 js/config.js
 
