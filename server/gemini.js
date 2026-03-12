@@ -66,15 +66,15 @@ function generateCustomMessage(description, businessName, callback) {
   if (!key) return callback(new Error('Falta GEMINI_API_KEY o GEMINI_API_KEYS'), '');
 
   var name = (businessName && String(businessName).trim()) ? businessName.trim() : 'el negocio';
-  var prompt = 'Sos un asistente que escribe mensajes cortos para contactar negocios.\n\n' +
-    'Te doy la descripción de un negocio. Generá un MENSAJE ÚNICO que alguien podría usar para escribirles (por WhatsApp, email, etc.). El mensaje debe:\n' +
-    '- Mencionar 1 o 2 aspectos concretos del negocio sacados de la descripción (tipo de lugar, especialidad, algo que los destaque).\n' +
-    '- Ser editable: tono profesional pero cercano, que el usuario pueda personalizarlo después.\n' +
-    '- Ser breve: entre 3 y 5 oraciones.\n' +
-    '- Estar en español rioplatense (Argentina).\n' +
-    '- No incluir saludo genérico tipo "Hola, les escribo..."; empezá directo con el contenido útil.\n' +
-    '- No inventes datos que no estén en la descripción.\n\n' +
-    'Nombre del negocio (para referencia): ' + name + '\n\n' +
+  var prompt = 'Sos un asistente que escribe mensajes de VENTA para contactar negocios.\n\n' +
+    'Quien escribe es una persona FREELANCE que ofrece hacer páginas web a negocios. El mensaje es para OFRECER ese servicio al negocio (por WhatsApp, email, etc.), no para preguntarles por sus productos.\n\n' +
+    'Reglas:\n' +
+    '- El mensaje debe OFRECER una página web / presencia online al negocio. Decir que ayudás a que más clientes los encuentren, conozcan el negocio, etc. Incluir una pregunta o cierre amable (ej. si quieren que les cuentes cómo podés ayudarlos).\n' +
+    '- Mencionar algo concreto del negocio sacado de la descripción (nombre, tipo, ubicación) para que suene personal, no genérico.\n' +
+    '- Tono: humano, cercano y descontracturado. Como un freelance que escribe a un dueño de negocio, no como una empresa corporativa. Profesional pero cálido, sin frases rígidas ni de manual de ventas.\n' +
+    '- Breve: 3 a 5 oraciones. Español rioplatense (Argentina).\n' +
+    '- No inventes datos que no estén en la descripción. Podés usar el nombre del negocio para saludar (ej. "Hola, [Nombre].") si está en la descripción.\n\n' +
+    'Nombre del negocio: ' + name + '\n\n' +
     'DESCRIPCIÓN DEL NEGOCIO:\n' + description.trim().slice(0, 2000) + '\n\n' +
     'Respondé solo con el texto del mensaje, sin título ni explicaciones.';
 

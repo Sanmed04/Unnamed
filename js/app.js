@@ -306,11 +306,29 @@
         var rb = b.rating != null ? b.rating : -1;
         return rb - ra;
       });
+    } else if (order === 'rating_bajo') {
+      list.sort(function (a, b) {
+        var ra = a.rating != null ? a.rating : -1;
+        var rb = b.rating != null ? b.rating : -1;
+        return ra - rb;
+      });
     } else if (order === 'reviews') {
       list.sort(function (a, b) {
         var na = a.user_ratings_total != null ? a.user_ratings_total : -1;
         var nb = b.user_ratings_total != null ? b.user_ratings_total : -1;
         return nb - na;
+      });
+    } else if (order === 'reviews_menos') {
+      list.sort(function (a, b) {
+        var na = a.user_ratings_total != null ? a.user_ratings_total : -1;
+        var nb = b.user_ratings_total != null ? b.user_ratings_total : -1;
+        return na - nb;
+      });
+    } else if (order === 'cercania_lejos') {
+      list.sort(function (a, b) {
+        var da = a.distanceMeters != null ? a.distanceMeters : 0;
+        var db = b.distanceMeters != null ? b.distanceMeters : 0;
+        return db - da;
       });
     } else {
       list.sort(function (a, b) {
