@@ -119,9 +119,11 @@
   /**
    * Añade un marcador en el mapa.
    * options.isPosibleCliente === true → icono azul.
-   * options.sinWeb === true (sin página web) → icono verde.
+   * options.sinWeb === true (sin página web) → imagen personalizada (pin sin web).
    * Por defecto → pin rojo.
    */
+  var SIN_WEB_ICON_URL = 'images/google-309741_640.webp';
+
   function addMarker(place, onClick, options) {
     var m = map;
     if (!m || !place.geometry || !place.geometry.location) return null;
@@ -143,12 +145,9 @@
       };
     } else if (sinWeb) {
       markerOpts.icon = {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: '#15803d',
-        fillOpacity: 1,
-        strokeColor: '#166534',
-        strokeWeight: 2
+        url: SIN_WEB_ICON_URL,
+        scaledSize: new google.maps.Size(36, 36),
+        anchor: new google.maps.Point(18, 36)
       };
     }
     var marker = new google.maps.Marker(markerOpts);
