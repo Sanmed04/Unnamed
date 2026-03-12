@@ -71,41 +71,48 @@ function serveStatic(filePath, res) {
 }
 
 const server = http.createServer((req, res) => {
-  const url = req.url === '/' ? '/index.html' : req.url;
-  const normalized = path.normalize(url).replace(/^(\.\.(\/|\\|$))+/, '');
-  const filePath = path.join(ROOT, normalized);
+  try {
+    const url = (req.url || '').split('?')[0];
+    const pathname = url === '/' ? '/index.html' : url;
+    const normalized = path.normalize(pathname).replace(/^(\.\.(\/|\\|$))+/, '');
+    const filePath = path.resolve(ROOT, normalized.replace(/^\//, ''));
 
-  if (normalized === 'js/config.js' || normalized === '/js/config.js') {
-    serveConfig(res);
-    return;
-  }
-
-  if (!filePath.startsWith(ROOT)) {
-    res.writeHead(403);
-    res.end();
-    return;
-  }
-
-  fs.stat(filePath, (err, stat) => {
-    if (err || !stat.isFile()) {
-      if (normalized.endsWith('/')) {
-        const index = path.join(filePath, 'index.html');
-        fs.stat(index, (e, s) => {
-          if (e || !s || !s.isFile()) {
-            res.writeHead(404);
-            res.end();
-          } else {
-            serveStatic(index, res);
-          }
-        });
-      } else {
-        res.writeHead(404);
-        res.end();
-      }
+    if (normalized === 'js/config.js' || normalized === '/js/config.js') {
+      serveConfig(res);
       return;
     }
-    serveStatic(filePath, res);
-  });
+
+    if (!filePath.startsWith(ROOT)) {
+      res.writeHead(403);
+      res.end();
+      return;
+    }
+
+    fs.stat(filePath, (err, stat) => {
+      if (err || !stat.isFile()) {
+        if (normalized.endsWith('/')) {
+          const index = path.join(filePath, 'index.html');
+          fs.stat(index, (e, s) => {
+            if (e || !s || !s.isFile()) {
+              res.writeHead(404);
+              res.end();
+            } else {
+              serveStatic(index, res);
+            }
+          });
+        } else {
+          res.writeHead(404);
+          res.end();
+        }
+        return;
+      }
+      serveStatic(filePath, res);
+    });
+  } catch (err) {
+    console.error('Error en request:', err);
+    res.writeHead(500);
+    res.end();
+  }
 });
 
 const HOST = process.env.HOST || '0.0.0.0';
@@ -117,4 +124,26 @@ server.listen(PORT, HOST, () => {
 server.on('error', function (err) {
   console.error('Error del servidor:', err.message);
   process.exit(1);
+});
+
+process.on('uncaughtException', function (err) {
+  console.error('uncaughtException:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', function (reason, p) {
+  console.error('unhandledRejection:', reason);
+});
+
+process.on('SIGTERM', function () {
+  console.log('SIGTERM, cerrando...');
+  server.close(function () {
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', function () {
+  server.close(function () {
+    process.exit(0);
+  });
 });
