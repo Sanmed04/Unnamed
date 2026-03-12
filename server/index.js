@@ -1,13 +1,30 @@
 /**
  * Servidor Web Job Finder: API (auth + posibles clientes) y archivos estáticos.
- * Para Railway: PORT en env. SQLite en data/wjf.db (persistir con volumen si hace falta).
+ * Para Railway: PORT y API keys en variables de entorno. En local se usa .env.
  */
 
+const fs = require('fs');
 const express = require('express');
 const path = require('path');
 const { register, login, requireAuth } = require('./auth');
 const posiblesClientes = require('./posiblesClientes');
 const { generatePlaceDescription } = require('./gemini');
+
+// Cargar .env en local (Railway usa sus propias variables de entorno)
+const envPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(envPath)) {
+  const env = fs.readFileSync(envPath, 'utf8');
+  env.split('\n').forEach(function (line) {
+    line = line.trim();
+    if (!line || line.startsWith('#')) return;
+    const i = line.indexOf('=');
+    if (i === -1) return;
+    const key = line.slice(0, i).trim();
+    let val = line.slice(i + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
+    if (!process.env[key]) process.env[key] = val;
+  });
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +61,29 @@ app.post('/api/generate-place-description', requireAuth, function (req, res) {
     if (err) return res.status(500).json({ error: 'No se pudo generar la descripción' });
     res.json({ description: description || '' });
   });
+});
+
+// Config desde variables de entorno (.env en local, Railway en producción). No usar archivo config.
+function escapeJsString(s) {
+  if (s == null) return "''";
+  return "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
+}
+app.get('/js/config.js', function (req, res) {
+  const key = process.env.GOOGLE_MAPS_API_KEY || '';
+  const body = [
+    'const CONFIG = {',
+    '  GOOGLE_MAPS_API_KEY: ' + escapeJsString(key) + ',',
+    '  DEBOUNCE_MS: 400,',
+    '  SEARCH_QUERY_MAX_LENGTH: 100,',
+    '  CITY_INPUT_MAX_LENGTH: 80,',
+    '  SEARCH_COOLDOWN_MS: 2000,',
+    '  DEBUG: false,',
+    '  REVIEWS_PER_PLACE_MAX: 5',
+    '};',
+    'window.CONFIG = CONFIG;'
+  ].join('\n');
+  res.type('application/javascript');
+  res.send(body);
 });
 
 // --- Estáticos (index, css, js) ---

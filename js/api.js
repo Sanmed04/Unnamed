@@ -1,6 +1,6 @@
 /**
  * Carga de la API de Google Maps/Places y wrappers de uso.
- * La key se inyecta de forma segura desde config (sin hardcodear en URLs en el repo).
+ * La key se inyecta desde variables de entorno (.env en local, Railway en producción).
  */
 
 (function (global) {
@@ -173,7 +173,7 @@
     const key = (global.CONFIG && global.CONFIG.GOOGLE_MAPS_API_KEY) || '';
     if (!key || key === 'YOUR_KEY_HERE' || key === 'PEGÁ_ACÁ_TU_API_KEY') {
       if (typeof global.onMapsApiError === 'function') {
-        global.onMapsApiError('Configurá GOOGLE_MAPS_API_KEY en js/config.js con tu clave de API.');
+        global.onMapsApiError('Configurá GOOGLE_MAPS_API_KEY en .env (o en las variables de entorno).');
       }
       return;
     }

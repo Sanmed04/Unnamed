@@ -13,10 +13,8 @@ Aplicación web de una sola página para encontrar negocios cerca, filtrar por t
 │   └── posiblesClientes.js
 ├── js/
 │   ├── auth-api.js     # Cliente API auth y posibles clientes
-│   ├── config.js       # Generado con npm run config
 │   └── ...
-├── .env.example
-└── scripts/inject-env.js
+└── .env.example
 ```
 
 ## Configuración (no subir datos sensibles)
@@ -28,10 +26,9 @@ Variables en **.env** (no subir a GitHub):
 - `PORT`: opcional en local (default 3000); Railway lo define automáticamente
 
 1. Clonar: `git clone ... && cd Unnamed`
-2. Copiar: `cp .env.example .env` y completar las variables
-3. Generar config del front: `npm run config`
-4. Instalar dependencias: `npm install` (o `pnpm install`)
-5. Ejecutar: `npm start` → http://localhost:3000 (servidor Express sirve la app y la API)
+2. Copiar: `cp .env.example .env` y completar las variables (en Railway se configuran en el dashboard, no en archivos).
+3. Instalar dependencias: `npm install` (o `pnpm install`)
+4. Ejecutar: `npm start` → http://localhost:3000 (el servidor lee .env en local y sirve la config desde variables de entorno)
 
 API key en [Google Cloud Console](https://console.cloud.google.com/): habilitar Maps JavaScript API y Places API.
 
@@ -43,7 +40,7 @@ Se aplican prácticas alineadas con OWASP para reducir riesgos en el cliente:
 | **Output encoding (XSS)** | Todo contenido dinámico que se escribe en HTML pasa por `Sanitize.escapeHtml`. Reseñas con resaltado usan `highlightInText` (escapa y solo envuelve en `<strong>`). |
 | **URLs seguras** | Enlaces a Google Maps solo se aceptan si empiezan por `https://` (`sanitizeUrl`). |
 | **Content Security Policy** | Meta CSP en `index.html`: solo scripts/style/fonts de orígenes permitidos y Google; sin `unsafe-inline` para scripts. |
-| **API key** | Key solo en `.env` (no se sube). `js/config.js` se genera con `npm run config` y está en `.gitignore`. Restringir la key por referrer y por API en Cloud Console. |
+| **API key** | Key solo en `.env` en local (no se sube). En producción (Railway) se usan las variables de entorno del proyecto. El servidor sirve `/js/config.js` inyectando la key desde env. Restringir la key por referrer y por API en Cloud Console. |
 | **Cooldown de búsqueda** | `SEARCH_COOLDOWN_MS` en config para limitar frecuencia de llamadas a la API (mitigación básica de abuso). |
 
 El **backend** (Express + SQLite) permite registrar usuarios y guardar la lista de posibles clientes por cuenta; así, al iniciar sesión desde otro dispositivo se ven los mismos datos. En producción servir por **HTTPS**.
@@ -55,8 +52,8 @@ El **backend** (Express + SQLite) permite registrar usuarios y guardar la lista 
    - `GOOGLE_MAPS_API_KEY`: tu clave de Google Maps/Places.
    - `JWT_SECRET`: una clave larga y aleatoria para las sesiones.
    - Railway define `PORT` automáticamente.
-3. **Build**: en Railway, configurar el comando de build como `npm run config` para generar `js/config.js` con la API key (las variables de entorno están disponibles en el build).
-4. **Start**: `npm start` (ya en `package.json`).
+3. **Build**: no hace falta comando de build especial; las API keys se leen en runtime desde las variables de entorno.
+4. **Start**: `npm start` (o `pnpm run start`).
 5. **Persistencia**: la base SQLite usa el disco del servicio (efímero por defecto). Para que no se pierda al redesplegar, añadí un **volume** en Railway y la variable `SQLITE_DB_PATH` apuntando a una ruta en ese volume (ej. `/data/wjf.db`).
 
 ## Descripciones de negocios con Gemini (opcional)
@@ -79,7 +76,7 @@ Gemini API key en [Google AI Studio](https://aistudio.google.com/apikey). Si un 
 
 ## Subir a GitHub
 
-No se suben **.env** ni **js/config.js** (están en `.gitignore`). Solo se sube la plantilla `.env.example` y `js/config.template.js`.
+No se sube **.env** (está en `.gitignore`). Se sube la plantilla `.env.example`.
 
 ```bash
 git init
@@ -90,7 +87,7 @@ git branch -M main
 git push -u origin main
 ```
 
-Quien clone el repo debe crear `.env` desde `.env.example`, poner su API key y ejecutar `npm run config`.
+Quien clone el repo debe crear `.env` desde `.env.example` y completar las variables; en Railway se configuran en el dashboard.
 
 ## Licencia
 
