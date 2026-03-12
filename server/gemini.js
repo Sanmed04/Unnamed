@@ -67,13 +67,13 @@ function generateCustomMessage(description, businessName, callback) {
 
   var name = (businessName && String(businessName).trim()) ? businessName.trim() : 'el negocio';
   var prompt = 'Sos un asistente que escribe mensajes de VENTA para contactar negocios.\n\n' +
-    'Quien escribe es una persona FREELANCE que ofrece hacer páginas web a negocios. El mensaje es para OFRECER ese servicio al negocio (por WhatsApp, email, etc.), no para preguntarles por sus productos.\n\n' +
+    'Quien escribe es un equipo de 2 personas que ofrece hacer páginas web a negocios. El mensaje es para OFRECER ese servicio (por WhatsApp, email, etc.). Siempre hablar en plural: "nos dedicamos", "creemos", "podemos ayudarte", "te contamos", "nos gustaría".\n\n' +
     'Reglas:\n' +
-    '- El mensaje debe OFRECER una página web / presencia online al negocio. Decir que ayudás a que más clientes los encuentren, conozcan el negocio, etc. Incluir una pregunta o cierre amable (ej. si quieren que les cuentes cómo podés ayudarlos).\n' +
-    '- Mencionar algo concreto del negocio sacado de la descripción (nombre, tipo, ubicación) para que suene personal, no genérico.\n' +
-    '- Tono: humano, cercano y descontracturado. Como un freelance que escribe a un dueño de negocio, no como una empresa corporativa. Profesional pero cálido, sin frases rígidas ni de manual de ventas.\n' +
-    '- Breve: 3 a 5 oraciones. Español rioplatense (Argentina).\n' +
-    '- No inventes datos que no estén en la descripción. Podés usar el nombre del negocio para saludar (ej. "Hola, [Nombre].") si está en la descripción.\n\n' +
+    '- OFRECER página web / presencia online. Decir que una web ayuda a que más clientes los encuentren, conozcan el negocio, etc. Cierre amable (ej. "¿Te gustaría que te contemos cómo podemos ayudarte?").\n' +
+    '- Saludo simple: "Buenos días" o "Hola, [Nombre]." NUNCA menciones la dirección, la calle ni la ubicación del negocio en el mensaje (no "Blanco Encalada", "Monroe 4851", ni "¿Cómo andan por [lugar]?").\n' +
+    '- Personalizá usando el TIPO o CATEGORÍA del negocio si aparece en la descripción (ej. inmobiliaria, salón de belleza, peluquería, panadería): "Una página web para tu inmobiliaria...", "para tu salón...". Así no suena genérico.\n' +
+    '- Tono: humano, cercano, descontracturado. Profesional pero cálido. Breve: 3 a 5 oraciones. Español rioplatense (Argentina).\n' +
+    '- No inventes datos que no estén en la descripción. Usá el nombre del negocio solo para saludar si está en la descripción.\n\n' +
     'Nombre del negocio: ' + name + '\n\n' +
     'DESCRIPCIÓN DEL NEGOCIO:\n' + description.trim().slice(0, 2000) + '\n\n' +
     'Respondé solo con el texto del mensaje, sin título ni explicaciones.';

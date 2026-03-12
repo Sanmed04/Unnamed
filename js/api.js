@@ -117,12 +117,16 @@
   }
 
   /**
-   * Añade un marcador en el mapa. Si options.isPosibleCliente es true, usa icono azul para distinguirlo.
+   * Añade un marcador en el mapa.
+   * options.isPosibleCliente === true → icono azul.
+   * options.sinWeb === true (sin página web) → icono verde.
+   * Por defecto → pin rojo.
    */
   function addMarker(place, onClick, options) {
     var m = map;
     if (!m || !place.geometry || !place.geometry.location) return null;
     var isPosible = options && options.isPosibleCliente === true;
+    var sinWeb = options && options.sinWeb === true;
     var markerOpts = {
       map: m,
       position: place.geometry.location,
@@ -135,6 +139,15 @@
         fillColor: '#1565C0',
         fillOpacity: 1,
         strokeColor: '#0D47A1',
+        strokeWeight: 2
+      };
+    } else if (sinWeb) {
+      markerOpts.icon = {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 12,
+        fillColor: '#15803d',
+        fillOpacity: 1,
+        strokeColor: '#166534',
         strokeWeight: 2
       };
     }

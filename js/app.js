@@ -384,7 +384,8 @@
     filtered.forEach(function (place) {
       var raw = { place_id: place.place_id, name: place.name, geometry: place.geometry };
       var isPosible = posiblesIds.indexOf(place.place_id) !== -1;
-      MapsApi.addMarker(raw, function () { openDetail(place); }, { isPosibleCliente: isPosible });
+      var sinWeb = !(place.website && place.website.trim());
+      MapsApi.addMarker(raw, function () { openDetail(place); }, { isPosibleCliente: isPosible, sinWeb: sinWeb });
     });
     MapsApi.setMapCenter(searchLat, searchLng);
     var map = MapsApi.getMap();
