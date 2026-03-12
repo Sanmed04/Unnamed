@@ -13,6 +13,7 @@
   var currentPlacesFromNameSearch = false;
   var STORAGE_KEY = 'donde_esta_posibles_clientes';
   var _posiblesClientesList = [];
+  var lastDetailDescription = '';
 
   var CONFIG = global.CONFIG || {};
   var Sanitize = global.Sanitize;
