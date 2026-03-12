@@ -13,9 +13,24 @@
  */
 
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-const GEMINI_MODEL = "gemini-2.0-flash-lite"; // alternativas: gemini-2.0-flash, gemini-3-flash-preview
+// Varias keys separadas por coma para rotar cuando hay límite de cuota
+function getGeminiKeys() {
+  const fromList = process.env.GEMINI_API_KEYS;
+  if (fromList && fromList.trim()) {
+    return fromList.split(",").map((k) => k.trim()).filter(Boolean);
+  }
+  const single = process.env.GEMINI_API_KEY;
+  return single && single.trim() ? [single.trim()] : [];
+}
+let _geminiKeyIndex = 0;
+function getNextGeminiKey() {
+  const keys = getGeminiKeys();
+  if (!keys.length) return null;
+  return keys[_geminiKeyIndex++ % keys.length];
+}
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash-lite";
 
 // ─── 1. FETCH PLACE DATA ────────────────────────────────────────────────────
 
@@ -179,7 +194,9 @@ REGLAS ESTRICTAS:
 DATOS DEL NEGOCIO:
 ${dataJson}`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+  const apiKey = getNextGeminiKey();
+  if (!apiKey) throw new Error("Falta GEMINI_API_KEY o GEMINI_API_KEYS");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
   const res = await fetch(url, {
     method: "POST",
@@ -264,8 +281,8 @@ if (isMain) {
     console.error("Falta GOOGLE_PLACES_API_KEY o GOOGLE_MAPS_API_KEY");
     process.exit(1);
   }
-  if (!GEMINI_API_KEY) {
-    console.error("Falta GEMINI_API_KEY");
+  if (getGeminiKeys().length === 0) {
+    console.error("Falta GEMINI_API_KEY o GEMINI_API_KEYS");
     process.exit(1);
   }
   getBusinessDescription(placeId).catch((err) => {

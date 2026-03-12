@@ -82,7 +82,9 @@ function serveDescriptionApi(placeId, res) {
     res.end(JSON.stringify({ description: null }));
     return;
   }
-  if (!process.env.GEMINI_API_KEY) {
+  var hasGeminiKey = (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) ||
+    (process.env.GEMINI_API_KEYS && process.env.GEMINI_API_KEYS.trim());
+  if (!hasGeminiKey) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ description: null }));
     return;

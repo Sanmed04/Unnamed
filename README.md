@@ -55,16 +55,15 @@ No hay backend: todas las llamadas son desde el navegador a la API de Google. En
 
 ## Descripciones de negocios con Gemini (opcional)
 
-Scripts para obtener datos de Google Place Details y generar una descripción corta con **Gemini 2.0 Flash Lite** (solo datos reales, sin inventar).
+La app y los scripts obtienen datos de Google Place Details y generan una descripción corta con **Gemini** (solo datos reales, sin inventar). La descripción se muestra en el panel de detalle al abrir un negocio.
 
-- **Variables de entorno:** `GEMINI_API_KEY` (obligatorio). Para Places: `GOOGLE_PLACES_API_KEY` o `GOOGLE_MAPS_API_KEY`.
+- **Variables de entorno:** `GEMINI_API_KEY` (o varias en `GEMINI_API_KEYS=key1,key2,key3` para rotar y repartir cuota). Opcional: `GEMINI_MODEL` (por defecto `gemini-2.5-flash-lite`). Para Places: `GOOGLE_PLACES_API_KEY` o `GOOGLE_MAPS_API_KEY`.
 - **Un solo lugar:**  
   `node scripts/placeDescription.mjs <place_id>`
-- **Varios lugares:** Crear un JSON con array de `place_id` (strings o objetos `{ "place_id": "ChIJ..." }`) y ejecutar:  
-  `node scripts/batchDescriptions.mjs places.json`  
-  Los resultados se guardan en `results.json`.
+- **Varios lugares:** Crear un JSON con array de `place_id` y ejecutar:  
+  `node scripts/batchDescriptions.mjs places.json` → resultados en `results.json`.
 
-Gemini API key en [Google AI Studio](https://aistudio.google.com/apikey).
+Gemini API key en [Google AI Studio](https://aistudio.google.com/apikey). Si un modelo agota cuota, probar otro en `GEMINI_MODEL` (ej. `gemini-2.5-flash-lite-preview-09-2025`, `gemini-3-flash-preview`).
 
 ## Tecnologías
 
