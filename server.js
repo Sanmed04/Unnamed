@@ -108,6 +108,13 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log('Servidor en http://localhost:' + PORT);
+const HOST = process.env.HOST || '0.0.0.0';
+
+server.listen(PORT, HOST, () => {
+  console.log('Servidor en http://' + HOST + ':' + PORT);
+});
+
+server.on('error', function (err) {
+  console.error('Error del servidor:', err.message);
+  process.exit(1);
 });
