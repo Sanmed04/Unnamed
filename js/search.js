@@ -393,6 +393,14 @@
       zoneHtml +
       detailRatingHtml +
       '<p class="detail-address">' + Sanitize.escapeHtml(place.vicinity) + '</p>' +
+      '<div class="detail-description-wrap" id="detailDescriptionWrap"><p class="detail-description-loading">Generando descripción…</p></div>' +
+      '<div class="detail-message-section">' +
+      '<button type="button" class="btn-generar-mensaje" id="btnGenerarMensaje">✉️ Generar mensaje personalizado</button>' +
+      '<div class="detail-message-wrap" id="detailMessageWrap" style="display:none;">' +
+      '<label for="detailMessageInput" class="detail-message-label">Mensaje (podés editarlo)</label>' +
+      '<textarea id="detailMessageInput" class="detail-message-input" rows="5" placeholder="El mensaje aparecerá acá…" maxlength="2000"></textarea>' +
+      '<button type="button" class="btn-copiar-mensaje" id="btnCopiarMensaje">Copiar</button>' +
+      '</div></div>' +
       phoneHtml +
       websiteBlock +
       '<div class="detail-posible-wrap">' + messageBlock + posibleBlock + '</div>' +

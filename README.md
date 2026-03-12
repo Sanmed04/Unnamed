@@ -35,7 +35,6 @@ Variables en **.env** (no subir a GitHub):
 
 API key en [Google Cloud Console](https://console.cloud.google.com/): habilitar Maps JavaScript API y Places API.
 
-
 Se aplican prácticas alineadas con OWASP para reducir riesgos en el cliente:
 
 | Práctica | Implementación |
@@ -59,6 +58,18 @@ El **backend** (Express + SQLite) permite registrar usuarios y guardar la lista 
 3. **Build**: en Railway, configurar el comando de build como `npm run config` para generar `js/config.js` con la API key (las variables de entorno están disponibles en el build).
 4. **Start**: `npm start` (ya en `package.json`).
 5. **Persistencia**: la base SQLite usa el disco del servicio (efímero por defecto). Para que no se pierda al redesplegar, añadí un **volume** en Railway y la variable `SQLITE_DB_PATH` apuntando a una ruta en ese volume (ej. `/data/wjf.db`).
+
+## Descripciones de negocios con Gemini (opcional)
+
+La app y los scripts obtienen datos de Google Place Details y generan una descripción corta con **Gemini** (solo datos reales, sin inventar). La descripción se muestra en el panel de detalle al abrir un negocio.
+
+- **Variables de entorno:** `GEMINI_API_KEY` (o varias en `GEMINI_API_KEYS=key1,key2,key3` para rotar y repartir cuota). Opcional: `GEMINI_MODEL` (por defecto `gemini-2.5-flash-lite`). Para Places: `GOOGLE_PLACES_API_KEY` o `GOOGLE_MAPS_API_KEY`.
+- **Un solo lugar:**  
+  `node scripts/placeDescription.mjs <place_id>`
+- **Varios lugares:** Crear un JSON con array de `place_id` y ejecutar:  
+  `node scripts/batchDescriptions.mjs places.json` → resultados en `results.json`.
+
+Gemini API key en [Google AI Studio](https://aistudio.google.com/apikey). Si un modelo agota cuota, probar otro en `GEMINI_MODEL` (ej. `gemini-2.5-flash-lite-preview-09-2025`, `gemini-3-flash-preview`).
 
 ## Tecnologías
 

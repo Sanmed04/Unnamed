@@ -458,6 +458,7 @@
   }
 
   function openDetail(place) {
+    lastDetailDescription = '';
     var isPosible = isPosibleCliente(place.place_id);
     var currentNote = getNoteForPlace(place.place_id);
     var currentCustomMessage = getCustomMessageForPlace(place.place_id);
