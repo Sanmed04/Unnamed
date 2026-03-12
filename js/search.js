@@ -386,11 +386,13 @@
     var messageBlock = '';
     if (isPosibleCliente) {
       messageBlock = '<div class="detail-message-wrap"><label for="detailCustomMessageInput" class="detail-note-label">Mensaje para el cliente</label>' +
+        '<button type="button" class="btn-generar-mensaje-cliente" id="btnGenerarMensajeCliente">Generar mensaje para el cliente</button>' +
         '<textarea id="detailCustomMessageInput" class="detail-note-input detail-message-input" rows="5" placeholder="Mensaje de oferta de tu servicio..." maxlength="2000">' + Sanitize.escapeHtml(currentCustomMessage || '') + '</textarea>' +
         '<button type="button" class="btn-guardar-nota" id="btnSaveCustomMessage">Guardar mensaje</button></div>';
     } else {
       messageBlock = '<div class="detail-message-wrap"><label for="detailCustomMessageInput" class="detail-note-label">Mensaje para el cliente</label>' +
-        '<textarea id="detailCustomMessageInput" class="detail-note-input detail-message-input" rows="5" placeholder="Mensaje de oferta de tu servicio..." maxlength="2000">' + Sanitize.escapeHtml(defaultPitch || '') + '</textarea>' +
+        '<button type="button" class="btn-generar-mensaje-cliente" id="btnGenerarMensajeCliente">Generar mensaje para el cliente</button>' +
+        '<textarea id="detailCustomMessageInput" class="detail-note-input detail-message-input" rows="5" placeholder="El mensaje se genera a partir de la descripción del negocio..." maxlength="2000">' + Sanitize.escapeHtml(defaultPitch || '') + '</textarea>' +
         '<p class="detail-message-hint">Podés editarlo antes de guardar. Se usará para ofrecer tu servicio a este negocio.</p></div>';
     }
 
@@ -417,13 +419,6 @@
       detailRatingHtml +
       '<p class="detail-address">' + Sanitize.escapeHtml(place.vicinity) + '</p>' +
       '<div class="detail-description-wrap" id="detailDescriptionWrap"><p class="detail-description-loading">Generando descripción…</p></div>' +
-      '<div class="detail-message-section">' +
-      '<button type="button" class="btn-generar-mensaje" id="btnGenerarMensaje">✉️ Generar mensaje personalizado</button>' +
-      '<div class="detail-message-wrap" id="detailMessageWrap" style="display:none;">' +
-      '<label for="detailMessageInput" class="detail-message-label">Mensaje (podés editarlo)</label>' +
-      '<textarea id="detailMessageInput" class="detail-message-input" rows="5" placeholder="El mensaje aparecerá acá…" maxlength="2000"></textarea>' +
-      '<button type="button" class="btn-copiar-mensaje" id="btnCopiarMensaje">Copiar</button>' +
-      '</div></div>' +
       phoneHtml +
       websiteBlock +
       '<div class="detail-posible-wrap">' + messageBlock + posibleBlock + '</div>' +

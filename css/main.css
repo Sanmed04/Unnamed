@@ -823,11 +823,36 @@ body::before {
   margin: 0;
 }
 
-.detail-message-section {
-  margin-bottom: 1.25rem;
+.detail-description-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 0.35rem 0;
 }
 
-.btn-generar-mensaje {
+.detail-description-text {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  margin: 0;
+  padding: 0.75rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--accent);
+}
+
+.detail-description-error {
+  color: var(--error, #b91c1c);
+  font-style: italic;
+}
+
+.detail-description-muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.btn-generar-mensaje,
+.btn-generar-mensaje-cliente {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -840,11 +865,18 @@ body::before {
   border-radius: var(--radius);
   cursor: pointer;
   transition: all var(--transition-base);
+  margin-bottom: 0.5rem;
 }
 
-.btn-generar-mensaje:hover {
+.btn-generar-mensaje:hover:not(:disabled),
+.btn-generar-mensaje-cliente:hover:not(:disabled) {
   background: var(--accent);
   color: var(--surface);
+}
+
+.btn-generar-mensaje-cliente:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .detail-message-wrap {

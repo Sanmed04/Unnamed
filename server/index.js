@@ -8,7 +8,7 @@ const express = require('express');
 const path = require('path');
 const { register, login, requireAuth } = require('./auth');
 const posiblesClientes = require('./posiblesClientes');
-const { generatePlaceDescription } = require('./gemini');
+const { generatePlaceDescription, generateCustomMessage } = require('./gemini');
 
 // Cargar .env en local (Railway usa sus propias variables de entorno)
 const envPath = path.join(__dirname, '..', '.env');
@@ -60,6 +60,16 @@ app.post('/api/generate-place-description', requireAuth, function (req, res) {
   generatePlaceDescription(name, address, type, function (err, description) {
     if (err) return res.status(500).json({ error: 'No se pudo generar la descripción' });
     res.json({ description: description || '' });
+  });
+});
+
+app.post('/api/generate-custom-message', requireAuth, function (req, res) {
+  var description = typeof req.body.description === 'string' ? req.body.description.trim() : '';
+  var businessName = typeof req.body.businessName === 'string' ? req.body.businessName.trim() : '';
+  if (!description) return res.status(400).json({ error: 'Falta la descripción' });
+  generateCustomMessage(description, businessName, function (err, message) {
+    if (err) return res.status(500).json({ error: 'No se pudo generar el mensaje' });
+    res.json({ message: message || '' });
   });
 });
 

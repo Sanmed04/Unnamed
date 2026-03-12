@@ -125,6 +125,15 @@
     });
   }
 
+  function generateCustomMessageFromDescription(description, businessName, callback) {
+    if (!getToken()) return callback(new Error('No hay sesión'), '');
+    var body = { description: description || '', businessName: businessName || '' };
+    request('POST', '/api/generate-custom-message', body, function (err, data) {
+      if (err) return callback(err, '');
+      callback(null, (data && data.message) ? data.message : '');
+    });
+  }
+
   function removePosibleClienteFromServer(placeId, callback) {
     if (!getToken()) return callback(new Error('No hay sesión'), null);
     var enc = encodeURIComponent(placeId);
@@ -153,6 +162,7 @@
     getPosiblesClientesFromServer: getPosiblesClientesFromServer,
     addPosibleClienteToServer: addPosibleClienteToServer,
     generatePlaceDescription: generatePlaceDescription,
+    generateCustomMessageFromDescription: generateCustomMessageFromDescription,
     removePosibleClienteFromServer: removePosibleClienteFromServer,
     updateNoteOnServer: updateNoteOnServer,
     updateCustomMessageOnServer: updateCustomMessageOnServer

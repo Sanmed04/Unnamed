@@ -229,6 +229,11 @@
     return item && typeof item.custom_message === 'string' ? item.custom_message : '';
   }
 
+  function getPlaceDescriptionForPlace(placeId) {
+    var item = getPosiblesClientes().filter(function (p) { return p.place_id === placeId; })[0];
+    return item && typeof item.place_description === 'string' ? item.place_description : '';
+  }
+
   function updateCustomMessage(placeId, message) {
     var list = getPosiblesClientes();
     var msg = typeof message === 'string' ? message : '';
@@ -498,6 +503,62 @@
       var noteInput = document.getElementById('detailNoteInput');
       var msgInput = document.getElementById('detailCustomMessageInput');
       var btnSaveMsg = document.getElementById('btnSaveCustomMessage');
+      var descWrap = document.getElementById('detailDescriptionWrap');
+      var btnGenerarMsg = document.getElementById('btnGenerarMensajeCliente');
+
+      function setDescriptionInPanel(description, isError) {
+        lastDetailDescription = description || '';
+        if (!descWrap) return;
+        if (isError) {
+          descWrap.innerHTML = '<p class="detail-description-text detail-description-error">No se pudo generar la descripción.</p>';
+          return;
+        }
+        if (!description || !description.trim()) {
+          if (!AuthApi.getToken()) {
+            descWrap.innerHTML = '<p class="detail-description-text detail-description-muted">Iniciá sesión para generar la descripción con IA.</p>';
+          } else {
+            descWrap.innerHTML = '<p class="detail-description-text detail-description-muted">No hay descripción para este negocio.</p>';
+          }
+          return;
+        }
+        var escaped = description.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        descWrap.innerHTML = '<p class="detail-description-label">Descripción del lugar</p><p class="detail-description-text">' + escaped + '</p>';
+      }
+
+      var savedDescription = getPlaceDescriptionForPlace(place.place_id);
+      if (savedDescription && savedDescription.trim()) {
+        setDescriptionInPanel(savedDescription, false);
+        if (btnGenerarMsg) btnGenerarMsg.disabled = false;
+      } else if (AuthApi.getToken()) {
+        AuthApi.generatePlaceDescription(place, function (err, description) {
+          setDescriptionInPanel(description, !!err);
+          if (btnGenerarMsg) btnGenerarMsg.disabled = !(lastDetailDescription && lastDetailDescription.trim());
+        });
+      } else {
+        setDescriptionInPanel('', false);
+        if (btnGenerarMsg) btnGenerarMsg.disabled = true;
+      }
+
+      if (btnGenerarMsg) {
+        btnGenerarMsg.onclick = function () {
+          if (!lastDetailDescription || !lastDetailDescription.trim()) {
+            if (typeof UI.showError === 'function') UI.showError('Primero se genera la descripción del negocio.');
+            return;
+          }
+          btnGenerarMsg.disabled = true;
+          btnGenerarMsg.textContent = 'Generando…';
+          AuthApi.generateCustomMessageFromDescription(lastDetailDescription, place.name, function (err, message) {
+            btnGenerarMsg.disabled = false;
+            btnGenerarMsg.textContent = 'Generar mensaje para el cliente';
+            if (err) {
+              if (typeof UI.showError === 'function') UI.showError(err.message || 'No se pudo generar el mensaje.');
+              return;
+            }
+            if (msgInput) msgInput.value = message || '';
+          });
+        };
+      }
+
       if (btnMark) btnMark.onclick = function () {
         var msg = msgInput ? msgInput.value : '';
         addPosibleCliente(place, msg);
@@ -505,7 +566,8 @@
       };
       if (btnUnmark) btnUnmark.onclick = function () { removePosibleCliente(place.place_id); openDetail(place); };
       if (btnSaveNote && noteInput) {
-        btnSaveNote.onclick = function () {
+        var saveNoteBtn = document.getElementById('btnSaveNote');
+        if (saveNoteBtn) saveNoteBtn.onclick = function () {
           updateNote(place.place_id, noteInput.value || '');
           openDetail(place);
         };
