@@ -68,7 +68,12 @@ app.post('/api/generate-custom-message', requireAuth, function (req, res) {
   var businessName = typeof req.body.businessName === 'string' ? req.body.businessName.trim() : '';
   if (!description) return res.status(400).json({ error: 'Falta la descripción' });
   generateCustomMessage(description, businessName, function (err, message) {
-    if (err) return res.status(500).json({ error: 'No se pudo generar el mensaje' });
+    if (err) {
+      console.error('generate-custom-message error:', err.message || err);
+      var msg = 'No se pudo generar el mensaje';
+      if (err.message && err.message.indexOf('Falta GEMINI') !== -1) msg = 'Falta configurar la API de Gemini en el servidor (GEMINI_API_KEY).';
+      return res.status(500).json({ error: msg });
+    }
     res.json({ message: message || '' });
   });
 });
