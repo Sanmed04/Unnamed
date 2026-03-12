@@ -154,11 +154,10 @@
   function showDetailPanel(html, onBindButtons) {
     var overlay = get('detailOverlay');
     var content = get('detailContent');
-    if (content) content.innerHTML = html;
-    if (overlay) {
-      overlay.classList.add('open');
-      overlay.setAttribute('aria-hidden', 'false');
-    }
+    if (!overlay || !content) return;
+    content.innerHTML = html;
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
     if (typeof onBindButtons === 'function') {
       setTimeout(onBindButtons, 0);
     }

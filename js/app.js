@@ -664,6 +664,10 @@
       });
     }
     if (detailClose) detailClose.addEventListener('click', UI.hideDetailPanel);
+    var detailPanel = UI.get('detailPanel');
+    if (detailPanel) {
+      detailPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+    }
     if (detailOverlay) {
       detailOverlay.addEventListener('click', function (e) {
         if (e.target === detailOverlay) UI.hideDetailPanel();
