@@ -544,14 +544,41 @@
         descWrap.innerHTML = '<p class="detail-description-label">Descripción del lugar</p><p class="detail-description-text">' + escaped + '</p>';
       }
 
+      function runGenerateMessage() {
+        if (!lastDetailDescription || !lastDetailDescription.trim() || !AuthApi.getToken()) return;
+        if (msgInput) {
+          msgInput.value = '';
+          msgInput.placeholder = 'Generando mensaje…';
+          msgInput.disabled = true;
+        }
+        if (btnGenerarMsg) {
+          btnGenerarMsg.disabled = true;
+          btnGenerarMsg.textContent = 'Generando…';
+        }
+        AuthApi.generateCustomMessageFromDescription(lastDetailDescription, place.name, function (err, message) {
+          if (msgInput) {
+            msgInput.disabled = false;
+            msgInput.placeholder = 'Mensaje de oferta de tu servicio...';
+            msgInput.value = err ? '' : (message || '');
+          }
+          if (btnGenerarMsg) {
+            btnGenerarMsg.disabled = false;
+            btnGenerarMsg.textContent = 'Generar mensaje para el cliente';
+          }
+          if (err && typeof UI.showError === 'function') UI.showError(err.message || 'No se pudo generar el mensaje.');
+        });
+      }
+
       var savedDescription = getPlaceDescriptionForPlace(place.place_id);
       if (savedDescription && savedDescription.trim()) {
         setDescriptionInPanel(savedDescription, false);
         if (btnGenerarMsg) btnGenerarMsg.disabled = false;
+        if (AuthApi.getToken()) setTimeout(runGenerateMessage, 400);
       } else if (AuthApi.getToken()) {
         AuthApi.generatePlaceDescription(place, function (err, description) {
           setDescriptionInPanel(description, !!err);
           if (btnGenerarMsg) btnGenerarMsg.disabled = !(lastDetailDescription && lastDetailDescription.trim());
+          if (lastDetailDescription && lastDetailDescription.trim()) setTimeout(runGenerateMessage, 400);
         });
       } else {
         setDescriptionInPanel('', false);
@@ -564,17 +591,7 @@
             if (typeof UI.showError === 'function') UI.showError('Primero se genera la descripción del negocio.');
             return;
           }
-          btnGenerarMsg.disabled = true;
-          btnGenerarMsg.textContent = 'Generando…';
-          AuthApi.generateCustomMessageFromDescription(lastDetailDescription, place.name, function (err, message) {
-            btnGenerarMsg.disabled = false;
-            btnGenerarMsg.textContent = 'Generar mensaje para el cliente';
-            if (err) {
-              if (typeof UI.showError === 'function') UI.showError(err.message || 'No se pudo generar el mensaje.');
-              return;
-            }
-            if (msgInput) msgInput.value = message || '';
-          });
+          runGenerateMessage();
         };
       }
 
