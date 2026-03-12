@@ -58,7 +58,12 @@ app.post('/api/generate-place-description', requireAuth, function (req, res) {
   var address = (req.body.address || req.body.vicinity || '').trim();
   var type = (req.body.type || '').trim();
   generatePlaceDescription(name, address, type, function (err, description) {
-    if (err) return res.status(500).json({ error: 'No se pudo generar la descripción' });
+    if (err) {
+      console.error('generate-place-description error:', err.message || err);
+      var msg = 'No se pudo generar la descripción';
+      if (err.message && err.message.indexOf('Falta GEMINI') !== -1) msg = 'Falta configurar la API de Gemini en el servidor (GEMINI_API_KEY).';
+      return res.status(500).json({ error: msg });
+    }
     res.json({ description: description || '' });
   });
 });
