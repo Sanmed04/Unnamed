@@ -61,7 +61,9 @@ app.post('/api/generate-place-description', requireAuth, function (req, res) {
     if (err) {
       console.error('generate-place-description error:', err.message || err);
       var msg = err.message || 'No se pudo generar la descripción';
-      return res.status(500).json({ error: msg });
+      var payload = { error: msg };
+      if (msg.indexOf('Todas las API keys') !== -1) payload.code = 'ALL_QUOTAS_EXCEEDED';
+      return res.status(500).json(payload);
     }
     res.json({ description: description || '' });
   });
@@ -74,7 +76,10 @@ app.post('/api/generate-custom-message', requireAuth, function (req, res) {
   generateCustomMessage(description, businessName, function (err, message) {
     if (err) {
       console.error('generate-custom-message error:', err.message || err);
-      return res.status(500).json({ error: err.message || 'No se pudo generar el mensaje' });
+      var msg = err.message || 'No se pudo generar el mensaje';
+      var payload = { error: msg };
+      if (msg.indexOf('Todas las API keys') !== -1) payload.code = 'ALL_QUOTAS_EXCEEDED';
+      return res.status(500).json(payload);
     }
     res.json({ message: message || '' });
   });

@@ -41,6 +41,25 @@
     if (errorState) errorState.classList.add('visible');
   }
 
+  function showQuotaBreakPopup() {
+    var overlay = document.getElementById('quotaBreakOverlay');
+    if (!overlay) return;
+    if (!overlay._boundClose) {
+      overlay._boundClose = true;
+      var closeBtn = document.getElementById('quotaBreakClose');
+      if (closeBtn) closeBtn.addEventListener('click', closeQuotaBreak);
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeQuotaBreak();
+      });
+    }
+    function closeQuotaBreak() {
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden', 'true');
+    }
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.classList.add('open');
+  }
+
   function showSkeleton(show) {
     var skeletonWrap = get('skeletonWrap');
     if (!skeletonWrap) return;
@@ -257,6 +276,7 @@
     hideStates: hideStates,
     showEmpty: showEmpty,
     showError: showError,
+    showQuotaBreakPopup: showQuotaBreakPopup,
     showSkeleton: showSkeleton,
     showResultsHeader: showResultsHeader,
     hideResultsHeader: hideResultsHeader,

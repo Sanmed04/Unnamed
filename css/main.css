@@ -1938,7 +1938,8 @@ h1 {
   margin-top: 0.5rem;
 }
 
-.auth-overlay {
+.auth-overlay,
+.quota-break-overlay {
   position: fixed;
   inset: 0;
   background: rgba(28, 25, 23, 0.5);
@@ -1952,9 +1953,50 @@ h1 {
   transition: opacity 0.25s, visibility 0.25s;
 }
 
-.auth-overlay.open {
+.auth-overlay.open,
+.quota-break-overlay.open {
   opacity: 1;
   visibility: visible;
+}
+
+.quota-break-modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 1.5rem 1.75rem;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+
+.quota-break-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.75rem 0;
+}
+
+.quota-break-text {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0 0 1.25rem 0;
+  line-height: 1.5;
+}
+
+.quota-break-close {
+  padding: 0.6rem 1.25rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.quota-break-close:hover {
+  background: var(--accent-hover);
 }
 
 .auth-modal {

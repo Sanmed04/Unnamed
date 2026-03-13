@@ -208,6 +208,7 @@
     };
     if (AuthApi.getToken()) {
       AuthApi.generatePlaceDescription(place, function (err, description) {
+        if (err && err.data && err.data.code === 'ALL_QUOTAS_EXCEEDED' && typeof UI.showQuotaBreakPopup === 'function') UI.showQuotaBreakPopup();
         item.place_description = description || '';
         AuthApi.addPosibleClienteToServer(item, function (errAdd) {
           if (errAdd) { if (typeof UI.showError === 'function') UI.showError(errAdd.message || 'No se pudo agregar'); return; }
@@ -626,7 +627,10 @@
             btnGenerarMsg.disabled = false;
             btnGenerarMsg.textContent = 'Generar mensaje para el cliente';
           }
-          if (err && typeof UI.showError === 'function') UI.showError(err.message || 'No se pudo generar el mensaje.');
+          if (err) {
+            if (err.data && err.data.code === 'ALL_QUOTAS_EXCEEDED' && typeof UI.showQuotaBreakPopup === 'function') UI.showQuotaBreakPopup();
+            else if (msgInput) msgInput.placeholder = 'No se pudo generar. Reintentá con el botón.';
+          }
         });
       }
 
@@ -637,6 +641,7 @@
         if (AuthApi.getToken()) setTimeout(runGenerateMessage, 400);
       } else if (AuthApi.getToken()) {
         AuthApi.generatePlaceDescription(place, function (err, description) {
+          if (err && err.data && err.data.code === 'ALL_QUOTAS_EXCEEDED' && typeof UI.showQuotaBreakPopup === 'function') UI.showQuotaBreakPopup();
           setDescriptionInPanel(description, !!err, err ? err.message : '');
           if (btnGenerarMsg) btnGenerarMsg.disabled = !(lastDetailDescription && lastDetailDescription.trim());
           if (lastDetailDescription && lastDetailDescription.trim()) setTimeout(runGenerateMessage, 400);
