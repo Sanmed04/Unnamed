@@ -90,7 +90,16 @@
   }
 
   function refreshPosiblesClientesUI() {
-    UI.updatePosiblesClientes(getPosiblesClientes(), openDetailFromPosible);
+    UI.updatePosiblesClientes(
+      getPosiblesClientes(),
+      openDetailFromPosible,
+      function (item, checked) {
+        updateStatus(item.place_id, checked ? 'esperando_respuesta' : '');
+      },
+      function (item) {
+        removePosibleCliente(item.place_id);
+      }
+    );
     renderPosiblesExtended();
     if (currentPlaces.length) applyFilters();
   }
@@ -117,12 +126,10 @@
       nameEl.className = 'posibles-extended-card-name';
       nameEl.textContent = item.name || 'Sin nombre';
       card.appendChild(nameEl);
-      if (item.statusLabel && item.statusLabel !== 'Sin estado') {
-        var statusEl = document.createElement('p');
-        statusEl.className = 'posibles-extended-status';
-        statusEl.textContent = item.statusLabel;
-        card.appendChild(statusEl);
-      }
+      var statusEl = document.createElement('p');
+      statusEl.className = item.statusLabel && item.statusLabel !== 'Sin estado' ? 'posibles-extended-status' : 'posibles-extended-status posibles-extended-status-muted';
+      statusEl.textContent = item.statusLabel && item.statusLabel !== 'Sin estado' ? item.statusLabel : 'Sin estado';
+      card.appendChild(statusEl);
       if (item.place_description) {
         var descLabel = document.createElement('p');
         descLabel.className = 'posibles-extended-label';
@@ -179,12 +186,21 @@
         noteEl.textContent = item.note;
         card.appendChild(noteEl);
       }
+      var actions = document.createElement('div');
+      actions.className = 'posibles-extended-card-actions';
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn-posibles-extended-detail';
       btn.textContent = 'Ver detalle';
       btn.addEventListener('click', function () { openDetailFromPosible(item); });
-      card.appendChild(btn);
+      actions.appendChild(btn);
+      var btnQuitar = document.createElement('button');
+      btnQuitar.type = 'button';
+      btnQuitar.className = 'btn-posibles-extended-quitar';
+      btnQuitar.textContent = 'Quitar de la lista';
+      btnQuitar.addEventListener('click', function () { removePosibleCliente(item.place_id); });
+      actions.appendChild(btnQuitar);
+      card.appendChild(actions);
       container.appendChild(card);
     });
   }

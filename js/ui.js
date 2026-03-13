@@ -190,7 +190,7 @@
     }
   }
 
-  function updatePosiblesClientes(list, onItemClick) {
+  function updatePosiblesClientes(list, onItemClick, onCheckEsperando, onRemove) {
     var wrap = get('posiblesList');
     var countEl = get('posiblesCount');
     if (countEl) countEl.textContent = String(list.length);
@@ -201,17 +201,46 @@
       li.className = 'posible-item';
       var name = item.name || item.place_id || 'Sin nombre';
       var statusLabel = item.statusLabel && item.statusLabel !== 'Sin estado' ? item.statusLabel : '';
-      li.textContent = statusLabel ? name + ' · ' + statusLabel : name;
+      var isEsperando = item.status === 'esperando_respuesta';
+
+      if (typeof onCheckEsperando === 'function') {
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'posible-item-checkbox';
+        cb.checked = isEsperando;
+        cb.setAttribute('aria-label', 'Marcar como esperando respuesta');
+        cb.addEventListener('click', function (e) { e.stopPropagation(); });
+        cb.addEventListener('change', function () { onCheckEsperando(item, cb.checked); });
+        li.appendChild(cb);
+      }
+
+      var span = document.createElement('span');
+      span.className = 'posible-item-name';
+      span.textContent = statusLabel ? name + ' · ' + statusLabel : name;
       if (typeof onItemClick === 'function') {
-        li.setAttribute('role', 'button');
-        li.setAttribute('tabindex', '0');
-        li.addEventListener('click', function () { onItemClick(item); });
-        li.addEventListener('keydown', function (e) {
+        span.setAttribute('role', 'button');
+        span.setAttribute('tabindex', '0');
+        span.addEventListener('click', function (e) { e.stopPropagation(); onItemClick(item); });
+        span.addEventListener('keydown', function (e) {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             onItemClick(item);
           }
         });
+      }
+      li.appendChild(span);
+
+      if (typeof onRemove === 'function') {
+        var btnDel = document.createElement('button');
+        btnDel.type = 'button';
+        btnDel.className = 'posible-item-remove';
+        btnDel.setAttribute('aria-label', 'Quitar de posibles clientes');
+        btnDel.textContent = '×';
+        btnDel.addEventListener('click', function (e) {
+          e.stopPropagation();
+          onRemove(item);
+        });
+        li.appendChild(btnDel);
       }
       wrap.appendChild(li);
     });

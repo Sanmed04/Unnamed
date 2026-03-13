@@ -1278,23 +1278,62 @@ body::before {
 }
 
 .posibles-list .posible-item {
-  padding: 0.625rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.5rem;
   border-bottom: 1px solid var(--border-subtle);
-  cursor: pointer;
   border-radius: var(--radius);
   margin-bottom: 0.25rem;
-  transition: all var(--transition-base);
+  transition: background var(--transition-base);
 }
 
 .posibles-list .posible-item:hover {
   background: var(--accent-soft);
-  color: var(--accent);
-  border-bottom-color: transparent;
-  padding-left: 0.875rem;
 }
 
 .posibles-list .posible-item:last-child {
   border-bottom: none;
+}
+
+.posibles-list .posible-item-checkbox {
+  flex-shrink: 0;
+  cursor: pointer;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
+.posibles-list .posible-item-name {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color var(--transition-base);
+}
+
+.posibles-list .posible-item:hover .posible-item-name {
+  color: var(--accent);
+}
+
+.posibles-list .posible-item-remove {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color, background var(--transition-base);
+}
+
+.posibles-list .posible-item-remove:hover {
+  color: var(--danger, #b91c1c);
+  background: rgba(220, 38, 38, 0.1);
 }
 
 /* ========================================
@@ -1851,6 +1890,11 @@ h1 {
   margin: 0;
 }
 
+.posibles-extended-status-muted {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
 .posibles-extended-label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -1890,8 +1934,14 @@ h1 {
   margin: 0;
 }
 
-.btn-posibles-extended-detail {
+.posibles-extended-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 0.25rem;
+}
+
+.btn-posibles-extended-detail {
   padding: 0.5rem 1rem;
   background: var(--accent);
   color: white;
@@ -1901,12 +1951,29 @@ h1 {
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  align-self: flex-start;
   transition: background 0.2s;
 }
 
 .btn-posibles-extended-detail:hover {
   background: var(--accent-hover);
+}
+
+.btn-posibles-extended-quitar {
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color, border-color, background 0.2s;
+}
+
+.btn-posibles-extended-quitar:hover {
+  color: var(--danger, #b91c1c);
+  border-color: var(--danger, #b91c1c);
+  background: rgba(220, 38, 38, 0.08);
 }
 
 /* ========================================
