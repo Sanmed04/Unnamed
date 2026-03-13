@@ -12,11 +12,10 @@ function getGeminiKeys() {
   return single && single.trim() ? [single.trim()] : [];
 }
 
-var _geminiKeyIndex = 0;
 function getNextKey() {
   var keys = getGeminiKeys();
   if (!keys.length) return null;
-  return keys[_geminiKeyIndex++ % keys.length];
+  return keys[Math.floor(Math.random() * keys.length)];
 }
 
 var GEMINI_MODEL = (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite').trim();
