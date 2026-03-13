@@ -52,7 +52,7 @@
       <section class="location-section" id="locationSection">
         <p id="locationMessage">Permití el acceso a tu ubicación para cargar negocios.</p>
         <div class="fallback-row" id="fallbackRow" style="display: none;">
-          <input type="text" id="cityInput" placeholder="Ej: Buenos Aires, Córdoba" maxlength="80">
+          <input type="text" id="cityInput" placeholder="Ej: Buenos Aires, Córdoba, Madrid España" maxlength="80" aria-label="Ciudad o país para buscar">
           <button type="button" id="citySearchBtn">Usar esta ciudad</button>
         </div>
         <p class="location-status" id="locationStatus"></p>
@@ -142,6 +142,10 @@
           <label class="filter-checkbox-wrap">
             <input type="checkbox" id="filterSinWeb" aria-label="Solo negocios sin página web">
             <span>Solo sin página web</span>
+          </label>
+          <label class="filter-checkbox-wrap">
+            <input type="checkbox" id="filterDisableGemini" aria-label="No usar Gemini (IA)">
+            <span>No usar Gemini</span>
           </label>
         </div>
       </div>

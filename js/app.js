@@ -223,13 +223,9 @@
       addedAt: new Date().toISOString()
     };
     if (AuthApi.getToken()) {
-      AuthApi.generatePlaceDescription(place, function (err, description) {
-        if (err && err.data && err.data.code === 'ALL_QUOTAS_EXCEEDED' && typeof UI.showQuotaBreakPopup === 'function') UI.showQuotaBreakPopup();
-        item.place_description = description || '';
-        AuthApi.addPosibleClienteToServer(item, function (errAdd) {
-          if (errAdd) { if (typeof UI.showError === 'function') UI.showError(errAdd.message || 'No se pudo agregar'); return; }
-          loadPosiblesClientes(function () { refreshPosiblesClientesUI(); });
-        });
+      AuthApi.addPosibleClienteToServer(item, function (errAdd) {
+        if (errAdd) { if (typeof UI.showError === 'function') UI.showError(errAdd.message || 'No se pudo agregar'); return; }
+        loadPosiblesClientes(function () { refreshPosiblesClientesUI(); });
       });
     } else {
       setPosiblesClientesList(getPosiblesClientes().concat([item]));
@@ -483,50 +479,59 @@
         userLat = pos.coords.latitude;
         userLng = pos.coords.longitude;
         setSearchCenter(userLat, userLng);
-        UI.setLocationSectionHidden(true);
-        UI.setHeaderActionsVisible(true);
-        UI.setLoadPlacesEnabled(true);
-        UI.setBarrioWrapVisible(true);
+        onLocationReady('Mi ubicación');
         MapsApi.setMapCenter(userLat, userLng);
       },
       function () {
         UI.setLocationMessage('No pudimos usar tu ubicación.');
-        UI.setLocationStatus('Ingresá una ciudad para buscar ahí.');
+        UI.setLocationStatus('Ingresá una ciudad o país para buscar ahí.');
         showFallback();
       }
     );
   }
 
-  function showFallback() {
+  /** Llamar cuando ya hay coordenadas (geolocalización o búsqueda por ciudad). Mantiene visible el buscador de otra ciudad/país. */
+  function onLocationReady(zoneLabel) {
+    UI.setLocationSectionHidden(false);
+    UI.setLocationMessage('Zona actual: ' + (zoneLabel || 'Mi ubicación') + '. Podés buscar en otra ciudad o país abajo.');
+    UI.setLocationStatus('');
     UI.setFallbackVisible(true);
+    UI.setHeaderActionsVisible(true);
+    UI.setLoadPlacesEnabled(true);
+    UI.setBarrioWrapVisible(true);
+    bindCitySearchButton();
+  }
+
+  function bindCitySearchButton() {
     var citySearchBtn = UI.get('citySearchBtn');
     var cityInput = UI.get('cityInput');
     if (!citySearchBtn || !cityInput) return;
     citySearchBtn.onclick = function () {
       var result = Sanitize.validateCity(cityInput.value);
       if (!result.valid) {
-        UI.setLocationStatus(result.error || 'Ingresá una ciudad.');
+        UI.setLocationStatus(result.error || 'Ingresá una ciudad o país.');
         return;
       }
       UI.setLocationStatus('Buscando…');
-      var address = result.value + ', Argentina';
+      var address = result.value.indexOf(',') !== -1 ? result.value : result.value + ', Argentina';
       MapsApi.geocode(address, function (results, status) {
         if (status === 'OK' && results && results[0]) {
           var loc = results[0].geometry.location;
           userLat = loc.lat();
           userLng = loc.lng();
           setSearchCenter(userLat, userLng);
-          UI.setLocationSectionHidden(true);
-          UI.setHeaderActionsVisible(true);
-          UI.setLoadPlacesEnabled(true);
-          UI.setBarrioWrapVisible(true);
-          UI.setLocationStatus('');
+          onLocationReady(result.value);
           MapsApi.setMapCenter(userLat, userLng);
         } else {
-          UI.setLocationStatus('No encontramos esa ciudad. Probá de nuevo.');
+          UI.setLocationStatus('No encontramos ese lugar. Probá "Ciudad, País".');
         }
       });
     };
+  }
+
+  function showFallback() {
+    UI.setFallbackVisible(true);
+    bindCitySearchButton();
   }
 
   /** URL correcta para abrir la ficha del lugar en Google Maps (no la búsqueda). */
@@ -541,7 +546,7 @@
   function openDetailFromPosible(item) {
     var place = currentPlaces.filter(function (p) { return p.place_id === item.place_id; })[0];
     if (place) {
-      openDetail(place);
+      openDetail(place, { fromPosiblesExtended: true });
       return;
     }
     var minimalPlace = {
@@ -556,10 +561,14 @@
       zone: '',
       types: []
     };
-    openDetail(minimalPlace);
+    openDetail(minimalPlace, { fromPosiblesExtended: true });
   }
 
-  function openDetail(place) {
+  function openDetail(place, options) {
+    options = options || {};
+    var fromPosiblesExtended = options.fromPosiblesExtended === true;
+    var disableGeminiEl = UI.get('filterDisableGemini');
+    var useGemini = !(disableGeminiEl && disableGeminiEl.checked);
     if (place && place.place_id) place.url = getMapsPlaceUrl(place);
     lastDetailDescription = '';
     var isPosible = isPosibleCliente(place.place_id);
@@ -712,19 +721,31 @@
       }
 
       var savedDescription = getPlaceDescriptionForPlace(place.place_id);
+      var mayRunGemini = fromPosiblesExtended && useGemini;
       if (savedDescription && savedDescription.trim()) {
         setDescriptionInPanel(savedDescription, false);
-        if (btnGenerarMsg) btnGenerarMsg.disabled = false;
-        if (AuthApi.getToken()) setTimeout(runGenerateMessage, 400);
-      } else if (AuthApi.getToken()) {
+        if (btnGenerarMsg) btnGenerarMsg.disabled = !mayRunGemini;
+        if (mayRunGemini && AuthApi.getToken()) setTimeout(runGenerateMessage, 400);
+      } else if (mayRunGemini && AuthApi.getToken()) {
         runDescriptionWithProgress();
       } else {
-        setDescriptionInPanel('', false);
+        if (!savedDescription && descWrap) {
+          if (!useGemini) {
+            descWrap.innerHTML = '<p class="detail-description-text detail-description-muted">Gemini desactivado. Activá la IA en filtros para generar descripción desde posibles clientes.</p>';
+          } else if (!fromPosiblesExtended) {
+            descWrap.innerHTML = '<p class="detail-description-text detail-description-muted">Abrí este negocio desde la vista de posibles clientes (lista derecha) para generar la descripción con IA.</p>';
+          } else {
+            setDescriptionInPanel('', false);
+          }
+        } else {
+          setDescriptionInPanel('', false);
+        }
         if (btnGenerarMsg) btnGenerarMsg.disabled = true;
       }
 
       if (btnGenerarMsg) {
         btnGenerarMsg.onclick = function () {
+          if (!useGemini) return;
           if (!lastDetailDescription || !lastDetailDescription.trim()) {
             if (typeof UI.showError === 'function') UI.showError('Primero se genera la descripción del negocio.');
             return;
