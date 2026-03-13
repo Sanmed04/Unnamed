@@ -512,6 +512,14 @@
     };
   }
 
+  /** URL correcta para abrir la ficha del lugar en Google Maps (no la búsqueda). */
+  function getMapsPlaceUrl(place) {
+    if (place && place.place_id) {
+      return 'https://www.google.com/maps/place/?q=place_id:' + encodeURIComponent(place.place_id);
+    }
+    return (place && place.url) ? place.url : '#';
+  }
+
   /** Abre el detalle desde un ítem de la lista de posibles clientes (por si no está en currentPlaces). */
   function openDetailFromPosible(item) {
     var place = currentPlaces.filter(function (p) { return p.place_id === item.place_id; })[0];
@@ -525,7 +533,7 @@
       vicinity: item.address || '',
       formatted_phone_number: item.formatted_phone_number || '',
       website: item.website || '',
-      url: 'https://www.google.com/maps/place/?q=place_id=' + encodeURIComponent(item.place_id),
+      url: getMapsPlaceUrl({ place_id: item.place_id }),
       rating: null,
       user_ratings_total: null,
       zone: '',
@@ -535,6 +543,7 @@
   }
 
   function openDetail(place) {
+    if (place && place.place_id) place.url = getMapsPlaceUrl(place);
     lastDetailDescription = '';
     var isPosible = isPosibleCliente(place.place_id);
     var currentNote = getNoteForPlace(place.place_id);
