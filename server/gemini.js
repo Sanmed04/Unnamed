@@ -38,10 +38,8 @@ function generatePlaceDescription(name, address, typeLabel, callback) {
   var keys = getGeminiKeys();
   if (!keys.length) return callback(new Error('Falta GEMINI_API_KEY o GEMINI_API_KEYS'), '');
 
-  var typeText = (typeLabel || '').trim() ? ' Tipo: ' + typeLabel + '.' : '';
-  var prompt = 'En una sola oración o dos, en español, describí este negocio para un profesional que quiere ofrecerle hacer su página web. Solo datos objetivos: qué es, dónde está, a qué se dedica. Sin opiniones ni ventas.\n\n' +
-    'Nombre: ' + (name || 'Sin nombre') + '\n' +
-    'Dirección: ' + (address || '') + typeText;
+  var typeText = (typeLabel || '').trim() ? '. Tipo: ' + typeLabel : '';
+  var prompt = 'Una oración en español: qué es este negocio y a qué se dedica. Solo datos.\n' + (name || 'Sin nombre') + '. ' + (address || '') + typeText;
 
   function tryKey(keyIndex) {
     if (keyIndex >= keys.length) return callback(new Error('Todas las API keys de Gemini fallaron (cuota o key vencida). Revisá GEMINI_API_KEYS y reintentá.'), '');
@@ -52,7 +50,7 @@ function generatePlaceDescription(name, address, typeLabel, callback) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 200, temperature: 0.3 }
+        generationConfig: { maxOutputTokens: 120, temperature: 0.3 }
       })
     })
       .then(function (res) {
@@ -97,17 +95,8 @@ function generateCustomMessage(description, businessName, callback) {
   if (!keys.length) return callback(new Error('Falta GEMINI_API_KEY o GEMINI_API_KEYS'), '');
 
   var name = (businessName && String(businessName).trim()) ? businessName.trim() : 'el negocio';
-  var prompt = 'Sos un asistente que escribe mensajes de VENTA para contactar negocios.\n\n' +
-    'Quien escribe es un equipo de 2 personas que ofrece hacer páginas web a negocios. El mensaje es para OFRECER ese servicio (por WhatsApp, email, etc.). Siempre hablar en plural: "nos dedicamos", "creemos", "podemos ayudarte", "te contamos", "nos gustaría".\n\n' +
-    'Reglas:\n' +
-    '- OFRECER página web / presencia online. Decir que una web ayuda a que más clientes los encuentren, conozcan el negocio, etc. Cierre amable (ej. "¿Te gustaría que te contemos cómo podemos ayudarte?").\n' +
-    '- Saludo simple: "Buenos días" o "Hola, [Nombre]." NUNCA menciones la dirección, la calle ni la ubicación del negocio en el mensaje (no "Blanco Encalada", "Monroe 4851", ni "¿Cómo andan por [lugar]?").\n' +
-    '- Personalizá usando el TIPO o CATEGORÍA del negocio si aparece en la descripción (ej. inmobiliaria, salón de belleza, peluquería, panadería): "Una página web para tu inmobiliaria...", "para tu salón...". Así no suena genérico.\n' +
-    '- Tono: humano, cercano, descontracturado. Profesional pero cálido. Breve: 3 a 5 oraciones. Español rioplatense (Argentina).\n' +
-    '- No inventes datos que no estén en la descripción. Usá el nombre del negocio solo para saludar si está en la descripción.\n\n' +
-    'Nombre del negocio: ' + name + '\n\n' +
-    'DESCRIPCIÓN DEL NEGOCIO:\n' + description.trim().slice(0, 2000) + '\n\n' +
-    'Respondé solo con el texto del mensaje, sin título ni explicaciones.';
+  var desc = description.trim().slice(0, 1200);
+  var prompt = 'Mensaje de venta corto (3-5 oraciones) para ofrecer página web a un negocio. Equipo de 2, plural ("nos dedicamos", "podemos ayudarte"). Saludo: "Buenos días" o "Hola, [Nombre]". No menciones dirección ni ubicación. Personalizá por tipo (ej. "para tu peluquería"). Tono cercano, español Argentina. Solo el mensaje, sin título.\n\nNegocio: ' + name + '\n' + desc;
 
   function tryKey(keyIndex) {
     if (keyIndex >= keys.length) return callback(new Error('Todas las API keys de Gemini fallaron (cuota o key vencida). Revisá GEMINI_API_KEYS y reintentá.'), '');
@@ -118,7 +107,7 @@ function generateCustomMessage(description, businessName, callback) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: 350, temperature: 0.5 }
+        generationConfig: { maxOutputTokens: 220, temperature: 0.5 }
       })
     })
       .then(function (res) {

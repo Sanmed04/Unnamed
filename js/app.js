@@ -642,7 +642,7 @@
       } else if (AuthApi.getToken()) {
         AuthApi.generatePlaceDescription(place, function (err, description) {
           if (err && err.data && err.data.code === 'ALL_QUOTAS_EXCEEDED' && typeof UI.showQuotaBreakPopup === 'function') UI.showQuotaBreakPopup();
-          setDescriptionInPanel(description, !!err, err ? err.message : '');
+          setDescriptionInPanel(description, !!err, err ? 'No se pudo cargar la descripción.' : '');
           if (btnGenerarMsg) btnGenerarMsg.disabled = !(lastDetailDescription && lastDetailDescription.trim());
           if (lastDetailDescription && lastDetailDescription.trim()) setTimeout(runGenerateMessage, 400);
         });
