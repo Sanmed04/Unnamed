@@ -12,10 +12,10 @@ function getGeminiKeys() {
   return single && single.trim() ? [single.trim()] : [];
 }
 
-function getNextKey() {
-  var keys = getGeminiKeys();
-  if (!keys.length) return null;
-  return keys[Math.floor(Math.random() * keys.length)];
+function isQuotaError(err) {
+  if (!err || !err.message) return false;
+  var m = String(err.message).toLowerCase();
+  return m.indexOf('quota') !== -1 || m.indexOf('exceeded') !== -1 || m.indexOf('rate') !== -1;
 }
 
 var GEMINI_MODEL = (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite').trim();
@@ -25,33 +25,55 @@ function hasGeminiKey() {
 }
 
 function generatePlaceDescription(name, address, typeLabel, callback) {
-  var key = getNextKey();
-  if (!key) return callback(null, '');
+  var keys = getGeminiKeys();
+  if (!keys.length) return callback(new Error('Falta GEMINI_API_KEY o GEMINI_API_KEYS'), '');
 
   var typeText = (typeLabel || '').trim() ? ' Tipo: ' + typeLabel + '.' : '';
   var prompt = 'En una sola oración o dos, en español, describí este negocio para un profesional que quiere ofrecerle hacer su página web. Solo datos objetivos: qué es, dónde está, a qué se dedica. Sin opiniones ni ventas.\n\n' +
     'Nombre: ' + (name || 'Sin nombre') + '\n' +
     'Dirección: ' + (address || '') + typeText;
 
-  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(key);
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 200, temperature: 0.3 }
+  function tryKey(keyIndex) {
+    if (keyIndex >= keys.length) return callback(new Error('Todas las API keys de Gemini superaron la cuota. Reintentá más tarde.'), '');
+    var key = keys[keyIndex];
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(key);
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 200, temperature: 0.3 }
+      })
     })
-  })
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
-      var text = '';
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-        text = (data.candidates[0].content.parts[0].text || '').trim();
-      }
-      if (data.error) return callback(new Error(data.error.message || 'Gemini error'), '');
-      callback(null, text);
-    })
-    .catch(function (err) { return callback(err, ''); });
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) {
+            var msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
+            return { error: { message: msg } };
+          }
+          return data;
+        }).catch(function () {
+          return { error: { message: 'HTTP ' + res.status + ' – respuesta no JSON' } };
+        });
+      })
+      .then(function (data) {
+        var text = '';
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+          text = (data.candidates[0].content.parts[0].text || '').trim();
+        }
+        if (data.error) {
+          var err = new Error(data.error.message || 'Gemini error');
+          if (isQuotaError(err) && keyIndex + 1 < keys.length) return tryKey(keyIndex + 1);
+          return callback(err, '');
+        }
+        callback(null, text);
+      })
+      .catch(function (err) {
+        if (isQuotaError(err) && keyIndex + 1 < keys.length) return tryKey(keyIndex + 1);
+        return callback(err, '');
+      });
+  }
+  tryKey(0);
 }
 
 /**
@@ -61,8 +83,8 @@ function generateCustomMessage(description, businessName, callback) {
   if (!description || typeof description !== 'string' || !description.trim()) {
     return callback(new Error('Falta la descripción del negocio'), '');
   }
-  var key = getNextKey();
-  if (!key) return callback(new Error('Falta GEMINI_API_KEY o GEMINI_API_KEYS'), '');
+  var keys = getGeminiKeys();
+  if (!keys.length) return callback(new Error('Falta GEMINI_API_KEY o GEMINI_API_KEYS'), '');
 
   var name = (businessName && String(businessName).trim()) ? businessName.trim() : 'el negocio';
   var prompt = 'Sos un asistente que escribe mensajes de VENTA para contactar negocios.\n\n' +
@@ -77,25 +99,47 @@ function generateCustomMessage(description, businessName, callback) {
     'DESCRIPCIÓN DEL NEGOCIO:\n' + description.trim().slice(0, 2000) + '\n\n' +
     'Respondé solo con el texto del mensaje, sin título ni explicaciones.';
 
-  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(key);
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 350, temperature: 0.5 }
+  function tryKey(keyIndex) {
+    if (keyIndex >= keys.length) return callback(new Error('Todas las API keys de Gemini superaron la cuota. Reintentá más tarde.'), '');
+    var key = keys[keyIndex];
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(key);
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 350, temperature: 0.5 }
+      })
     })
-  })
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
-      if (data.error) return callback(new Error(data.error.message || 'Gemini error'), '');
-      var text = '';
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-        text = (data.candidates[0].content.parts[0].text || '').trim();
-      }
-      callback(null, text);
-    })
-    .catch(function (err) { return callback(err, ''); });
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok) {
+            var msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
+            return { error: { message: msg } };
+          }
+          return data;
+        }).catch(function () {
+          return { error: { message: 'HTTP ' + res.status + ' – respuesta no JSON' } };
+        });
+      })
+      .then(function (data) {
+        if (data.error) {
+          var err = new Error(data.error.message || 'Gemini error');
+          if (isQuotaError(err) && keyIndex + 1 < keys.length) return tryKey(keyIndex + 1);
+          return callback(err, '');
+        }
+        var text = '';
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+          text = (data.candidates[0].content.parts[0].text || '').trim();
+        }
+        callback(null, text);
+      })
+      .catch(function (err) {
+        if (isQuotaError(err) && keyIndex + 1 < keys.length) return tryKey(keyIndex + 1);
+        return callback(err, '');
+      });
+  }
+  tryKey(0);
 }
 
 module.exports = { hasGeminiKey, generatePlaceDescription, generateCustomMessage };

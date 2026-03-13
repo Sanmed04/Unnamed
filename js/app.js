@@ -525,11 +525,13 @@
       var descWrap = document.getElementById('detailDescriptionWrap');
       var btnGenerarMsg = document.getElementById('btnGenerarMensajeCliente');
 
-      function setDescriptionInPanel(description, isError) {
+      function setDescriptionInPanel(description, isError, errorMessage) {
         lastDetailDescription = description || '';
         if (!descWrap) return;
         if (isError) {
-          descWrap.innerHTML = '<p class="detail-description-text detail-description-error">No se pudo generar la descripción.</p>';
+          var msg = (errorMessage && errorMessage.trim()) ? errorMessage.trim() : 'No se pudo generar la descripción.';
+          var escaped = msg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          descWrap.innerHTML = '<p class="detail-description-text detail-description-error">' + escaped + '</p>';
           return;
         }
         if (!description || !description.trim()) {
@@ -576,7 +578,7 @@
         if (AuthApi.getToken()) setTimeout(runGenerateMessage, 400);
       } else if (AuthApi.getToken()) {
         AuthApi.generatePlaceDescription(place, function (err, description) {
-          setDescriptionInPanel(description, !!err);
+          setDescriptionInPanel(description, !!err, err ? err.message : '');
           if (btnGenerarMsg) btnGenerarMsg.disabled = !(lastDetailDescription && lastDetailDescription.trim());
           if (lastDetailDescription && lastDetailDescription.trim()) setTimeout(runGenerateMessage, 400);
         });
