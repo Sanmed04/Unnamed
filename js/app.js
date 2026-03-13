@@ -708,7 +708,6 @@
               if (!err && description && description.trim()) {
                 setDescriptionInPanel(description, false);
                 if (btnGenerarMsg) btnGenerarMsg.disabled = false;
-                if (lastDetailDescription && lastDetailDescription.trim()) setTimeout(runGenerateMessage, 400);
                 return;
               }
               if (err && err.retryInSeconds != null) retrySecondsByKey[keyIdx] = err.retryInSeconds;
@@ -725,9 +724,6 @@
       if (savedDescription && savedDescription.trim()) {
         setDescriptionInPanel(savedDescription, false);
         if (btnGenerarMsg) btnGenerarMsg.disabled = !mayRunGemini;
-        if (mayRunGemini && AuthApi.getToken()) setTimeout(runGenerateMessage, 400);
-      } else if (mayRunGemini && AuthApi.getToken()) {
-        runDescriptionWithProgress();
       } else {
         if (!savedDescription && descWrap) {
           if (!useGemini) {
@@ -735,7 +731,10 @@
           } else if (!fromPosiblesExtended) {
             descWrap.innerHTML = '<p class="detail-description-text detail-description-muted">Abrí este negocio desde la vista de posibles clientes (lista derecha) para generar la descripción con IA.</p>';
           } else {
-            setDescriptionInPanel('', false);
+            descWrap.innerHTML = '<p class="detail-description-text detail-description-muted">No hay descripción.</p>' +
+              '<button type="button" class="btn-generar-descripcion" id="btnGenerarDescripcion">Generar descripción</button>';
+            var btnGenerarDesc = document.getElementById('btnGenerarDescripcion');
+            if (btnGenerarDesc) btnGenerarDesc.onclick = function () { runDescriptionWithProgress(); };
           }
         } else {
           setDescriptionInPanel('', false);

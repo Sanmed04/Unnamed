@@ -942,6 +942,27 @@ body::before {
   font-style: italic;
 }
 
+.btn-generar-descripcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.btn-generar-descripcion:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
 .btn-generar-mensaje,
 .btn-generar-mensaje-cliente {
   display: inline-flex;
