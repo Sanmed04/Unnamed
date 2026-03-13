@@ -112,6 +112,15 @@
     }, callback);
   }
 
+  function getGeminiKeysCount(callback) {
+    if (!getToken()) return callback(new Error('No hay sesión'), 0);
+    request('GET', '/api/gemini-keys-count', null, function (err, data) {
+      if (err) return callback(err, 0);
+      var n = (data && typeof data.count === 'number') ? data.count : 0;
+      callback(null, n);
+    });
+  }
+
   function generatePlaceDescription(place, callback) {
     if (!getToken()) return callback(null, '');
     var body = {
@@ -121,6 +130,23 @@
     };
     request('POST', '/api/generate-place-description', body, function (err, data) {
       if (err) return callback(err, '');
+      callback(null, (data && data.description) ? data.description : '');
+    });
+  }
+
+  function generatePlaceDescriptionWithKeyIndex(place, keyIndex, callback) {
+    if (!getToken()) return callback(new Error('No hay sesión'), '');
+    var body = {
+      name: place.name || '',
+      address: place.vicinity || place.address || '',
+      type: (place.types && place.types[0]) ? place.types[0].replace(/_/g, ' ') : '',
+      keyIndex: keyIndex
+    };
+    request('POST', '/api/generate-place-description', body, function (err, data) {
+      if (err) {
+        if (err.data && err.data.retry_in_seconds != null) err.retryInSeconds = err.data.retry_in_seconds;
+        return callback(err, '');
+      }
       callback(null, (data && data.description) ? data.description : '');
     });
   }
@@ -167,7 +193,9 @@
     login: login,
     getPosiblesClientesFromServer: getPosiblesClientesFromServer,
     addPosibleClienteToServer: addPosibleClienteToServer,
+    getGeminiKeysCount: getGeminiKeysCount,
     generatePlaceDescription: generatePlaceDescription,
+    generatePlaceDescriptionWithKeyIndex: generatePlaceDescriptionWithKeyIndex,
     generateCustomMessageFromDescription: generateCustomMessageFromDescription,
     removePosibleClienteFromServer: removePosibleClienteFromServer,
     updateNoteOnServer: updateNoteOnServer,

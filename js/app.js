@@ -634,18 +634,74 @@
         });
       }
 
+      function runDescriptionWithProgress() {
+        AuthApi.getGeminiKeysCount(function (errCount, count) {
+          if (errCount || !count) {
+            setDescriptionInPanel('', true, 'No se pudo cargar la descripción.');
+            if (btnGenerarMsg) btnGenerarMsg.disabled = true;
+            return;
+          }
+          var retrySecondsByKey = [];
+          var keyOrder = [];
+          for (var k = 0; k < count; k++) keyOrder.push(k);
+          var idx = 0;
+          function tryNextKey(order) {
+            if (idx >= order.length) {
+              var minSec = null;
+              var bestIdx = 0;
+              for (var j = 0; j < retrySecondsByKey.length; j++) {
+                if (retrySecondsByKey[j] != null && (minSec === null || retrySecondsByKey[j] < minSec)) {
+                  minSec = retrySecondsByKey[j];
+                  bestIdx = j;
+                }
+              }
+              if (descWrap) {
+                descWrap.innerHTML = '<div class="detail-description-error-wrap"><p class="detail-description-text detail-description-error">No se pudo cargar la descripción.</p>' +
+                  '<button type="button" class="btn-detail-retry-description" id="btnRetryDescription">Reintentar</button></div>';
+                var btnRetry = document.getElementById('btnRetryDescription');
+                if (btnRetry) {
+                  btnRetry.onclick = function () {
+                    var waitMs = (minSec != null && minSec > 0) ? minSec * 1000 : 0;
+                    if (waitMs > 0 && descWrap) descWrap.innerHTML = '<p class="detail-description-text">Reintentando en ' + minSec + ' s (key con menor espera)…</p>';
+                    setTimeout(function () {
+                      var retryOrder = [bestIdx];
+                      for (var r = 0; r < count; r++) { if (r !== bestIdx) retryOrder.push(r); }
+                      idx = 0;
+                      retrySecondsByKey.length = 0;
+                      if (descWrap) descWrap.innerHTML = '<p class="detail-description-loading">Intentando 1/' + count + '…</p>';
+                      tryNextKey(retryOrder);
+                    }, waitMs);
+                  };
+                }
+              }
+              if (btnGenerarMsg) btnGenerarMsg.disabled = true;
+              return;
+            }
+            var keyIdx = order[idx];
+            if (descWrap) descWrap.innerHTML = '<p class="detail-description-loading">Intentando ' + (idx + 1) + '/' + count + '…</p>';
+            AuthApi.generatePlaceDescriptionWithKeyIndex(place, keyIdx, function (err, description) {
+              if (!err && description && description.trim()) {
+                setDescriptionInPanel(description, false);
+                if (btnGenerarMsg) btnGenerarMsg.disabled = false;
+                if (lastDetailDescription && lastDetailDescription.trim()) setTimeout(runGenerateMessage, 400);
+                return;
+              }
+              if (err && err.retryInSeconds != null) retrySecondsByKey[keyIdx] = err.retryInSeconds;
+              idx++;
+              tryNextKey(order);
+            });
+          }
+          tryNextKey(keyOrder);
+        });
+      }
+
       var savedDescription = getPlaceDescriptionForPlace(place.place_id);
       if (savedDescription && savedDescription.trim()) {
         setDescriptionInPanel(savedDescription, false);
         if (btnGenerarMsg) btnGenerarMsg.disabled = false;
         if (AuthApi.getToken()) setTimeout(runGenerateMessage, 400);
       } else if (AuthApi.getToken()) {
-        AuthApi.generatePlaceDescription(place, function (err, description) {
-          if (err && err.data && err.data.code === 'ALL_QUOTAS_EXCEEDED' && typeof UI.showQuotaBreakPopup === 'function') UI.showQuotaBreakPopup();
-          setDescriptionInPanel(description, !!err, err ? 'No se pudo cargar la descripción.' : '');
-          if (btnGenerarMsg) btnGenerarMsg.disabled = !(lastDetailDescription && lastDetailDescription.trim());
-          if (lastDetailDescription && lastDetailDescription.trim()) setTimeout(runGenerateMessage, 400);
-        });
+        runDescriptionWithProgress();
       } else {
         setDescriptionInPanel('', false);
         if (btnGenerarMsg) btnGenerarMsg.disabled = true;

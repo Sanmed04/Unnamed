@@ -28,10 +28,70 @@ function shouldTryNextKey(err, keyIndex, keysLength) {
   return keyIndex + 1 < keysLength && (isQuotaError(err) || isKeyError(err));
 }
 
+function parseRetrySeconds(message) {
+  if (!message || typeof message !== 'string') return null;
+  var m = message.match(/retry\s+in\s+(\d+(?:\.\d+)?)\s*s/i);
+  return m ? Math.ceil(parseFloat(m[1])) : null;
+}
+
 var GEMINI_MODEL = (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite').trim();
 
 function hasGeminiKey() {
   return getGeminiKeys().length > 0;
+}
+
+function getGeminiKeysCount() {
+  return getGeminiKeys().length;
+}
+
+/** Intenta solo la key en keyIndex. Para uso del cliente que muestra progreso 1/N. */
+function generatePlaceDescriptionWithKeyIndex(name, address, typeLabel, keyIndex, callback) {
+  var keys = getGeminiKeys();
+  if (!keys.length) return callback(new Error('Falta GEMINI_API_KEY o GEMINI_API_KEYS'), '');
+  var idx = parseInt(keyIndex, 10);
+  if (isNaN(idx) || idx < 0 || idx >= keys.length) return callback(new Error('keyIndex inválido'), '');
+
+  var typeText = (typeLabel || '').trim() ? '. Tipo: ' + typeLabel : '';
+  var prompt = 'Una oración en español: qué es este negocio y a qué se dedica. Solo datos.\n' + (name || 'Sin nombre') + '. ' + (address || '') + typeText;
+  var key = keys[idx];
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(key);
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 120, temperature: 0.3 }
+    })
+  })
+    .then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var msg = (data && data.error && data.error.message) ? data.error.message : ('HTTP ' + res.status);
+          return { error: { message: msg } };
+        }
+        return data;
+      }).catch(function () {
+        return { error: { message: 'HTTP ' + res.status + ' – respuesta no JSON' } };
+      });
+    })
+    .then(function (data) {
+      var text = '';
+      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+        text = (data.candidates[0].content.parts[0].text || '').trim();
+      }
+      if (data.error) {
+        var err = new Error(data.error.message || 'Gemini error');
+        var sec = parseRetrySeconds(data.error.message || '');
+        if (sec != null) err.retryInSeconds = sec;
+        return callback(err, '');
+      }
+      callback(null, text);
+    })
+    .catch(function (err) {
+      var sec = parseRetrySeconds(err && err.message);
+      if (sec != null && err) err.retryInSeconds = sec;
+      return callback(err, '');
+    });
 }
 
 function generatePlaceDescription(name, address, typeLabel, callback) {
@@ -141,4 +201,4 @@ function generateCustomMessage(description, businessName, callback) {
   tryKey(0);
 }
 
-module.exports = { hasGeminiKey, generatePlaceDescription, generateCustomMessage };
+module.exports = { hasGeminiKey, getGeminiKeysCount, generatePlaceDescription, generatePlaceDescriptionWithKeyIndex, generateCustomMessage };

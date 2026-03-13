@@ -8,7 +8,7 @@ const express = require('express');
 const path = require('path');
 const { register, login, requireAuth } = require('./auth');
 const posiblesClientes = require('./posiblesClientes');
-const { generatePlaceDescription, generateCustomMessage } = require('./gemini');
+const { generatePlaceDescription, generatePlaceDescriptionWithKeyIndex, generateCustomMessage, getGeminiKeysCount } = require('./gemini');
 
 // Cargar .env en local (Railway usa sus propias variables de entorno)
 const envPath = path.join(__dirname, '..', '.env');
@@ -53,10 +53,31 @@ app.post('/api/posibles-clientes', requireAuth, posiblesClientes.add);
 app.delete('/api/posibles-clientes/:placeId', requireAuth, posiblesClientes.remove);
 app.patch('/api/posibles-clientes/:placeId', requireAuth, posiblesClientes.updateNote);
 
+app.get('/api/gemini-keys-count', requireAuth, function (req, res) {
+  var count = getGeminiKeysCount();
+  res.json({ count: count });
+});
+
 app.post('/api/generate-place-description', requireAuth, function (req, res) {
   var name = (req.body.name || '').trim() || 'Sin nombre';
   var address = (req.body.address || req.body.vicinity || '').trim();
   var type = (req.body.type || '').trim();
+  var keyIndex = req.body.keyIndex;
+
+  if (typeof keyIndex === 'number' && keyIndex >= 0) {
+    generatePlaceDescriptionWithKeyIndex(name, address, type, keyIndex, function (err, description) {
+      if (err) {
+        console.error('generate-place-description key ' + keyIndex + ' error:', err.message || err);
+        var payload = { error: err.message || 'No se pudo generar la descripción' };
+        if (err.retryInSeconds != null) payload.retry_in_seconds = err.retryInSeconds;
+        if (payload.error.indexOf('Todas las API keys') !== -1) payload.code = 'ALL_QUOTAS_EXCEEDED';
+        return res.status(500).json(payload);
+      }
+      res.json({ description: description || '' });
+    });
+    return;
+  }
+
   generatePlaceDescription(name, address, type, function (err, description) {
     if (err) {
       console.error('generate-place-description error:', err.message || err);
