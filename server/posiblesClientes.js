@@ -7,7 +7,7 @@ const { getDb } = require('./db');
 function list(req, res) {
   const db = getDb();
   const rows = db.prepare(`
-    SELECT place_id, name, address, formatted_phone_number, website, note, custom_message, place_description, added_at
+    SELECT place_id, name, address, formatted_phone_number, website, note, custom_message, place_description, status, added_at
     FROM posibles_clientes
     WHERE user_id = ?
     ORDER BY added_at DESC
@@ -22,6 +22,7 @@ function list(req, res) {
       note: r.note || '',
       custom_message: r.custom_message != null ? r.custom_message : '',
       place_description: r.place_description != null ? r.place_description : '',
+      status: r.status != null ? r.status : '',
       addedAt: r.added_at
     };
   });
@@ -37,15 +38,16 @@ function add(req, res) {
   const website = (body.website || '').trim();
   const custom_message = typeof body.custom_message === 'string' ? body.custom_message.trim() : '';
   const place_description = typeof body.place_description === 'string' ? body.place_description.trim() : '';
+  const status = typeof body.status === 'string' ? body.status.trim() : '';
   if (!place_id) {
     return res.status(400).json({ error: 'place_id es obligatorio' });
   }
   const db = getDb();
   try {
     db.prepare(`
-      INSERT INTO posibles_clientes (user_id, place_id, name, address, formatted_phone_number, website, note, custom_message, place_description)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(req.user.id, place_id, name, address, formatted_phone_number, website, body.note || '', custom_message, place_description);
+      INSERT INTO posibles_clientes (user_id, place_id, name, address, formatted_phone_number, website, note, custom_message, place_description, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(req.user.id, place_id, name, address, formatted_phone_number, website, body.note || '', custom_message, place_description, status);
   } catch (e) {
     if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       return res.status(409).json({ error: 'Ya está en tu lista' });
@@ -53,7 +55,7 @@ function add(req, res) {
     throw e;
   }
   const row = db.prepare(`
-    SELECT place_id, name, address, formatted_phone_number, website, note, custom_message, place_description, added_at
+    SELECT place_id, name, address, formatted_phone_number, website, note, custom_message, place_description, status, added_at
     FROM posibles_clientes WHERE user_id = ? AND place_id = ?
   `).get(req.user.id, place_id);
   res.status(201).json({
@@ -65,6 +67,7 @@ function add(req, res) {
     note: row.note || '',
     custom_message: row.custom_message != null ? row.custom_message : '',
     place_description: row.place_description != null ? row.place_description : '',
+    status: row.status != null ? row.status : '',
     addedAt: row.added_at
   });
 }
@@ -86,20 +89,23 @@ function remove(req, res) {
 function updateNote(req, res) {
   const placeId = (req.params.placeId || '').trim();
   const body = req.body || {};
-  const note = typeof body.note === 'string' ? body.note : '';
+  const note = typeof body.note === 'string' ? body.note : undefined;
   const custom_message = typeof body.custom_message === 'string' ? body.custom_message : undefined;
+  const status = typeof body.status === 'string' ? body.status : undefined;
   if (!placeId) {
     return res.status(400).json({ error: 'placeId es obligatorio' });
   }
   const db = getDb();
-  var result;
-  if (custom_message !== undefined) {
-    result = db.prepare('UPDATE posibles_clientes SET note = ?, custom_message = ? WHERE user_id = ? AND place_id = ?')
-      .run(note, custom_message.trim(), req.user.id, placeId);
-  } else {
-    result = db.prepare('UPDATE posibles_clientes SET note = ? WHERE user_id = ? AND place_id = ?')
-      .run(note, req.user.id, placeId);
+  const row = db.prepare('SELECT note, custom_message, status FROM posibles_clientes WHERE user_id = ? AND place_id = ?')
+    .get(req.user.id, placeId);
+  if (!row) {
+    return res.status(404).json({ error: 'No encontrado' });
   }
+  const newNote = note !== undefined ? note : row.note;
+  const newCustomMessage = custom_message !== undefined ? custom_message : (row.custom_message != null ? row.custom_message : '');
+  const newStatus = status !== undefined ? status : (row.status != null ? row.status : '');
+  const result = db.prepare('UPDATE posibles_clientes SET note = ?, custom_message = ?, status = ? WHERE user_id = ? AND place_id = ?')
+    .run(newNote, newCustomMessage, newStatus, req.user.id, placeId);
   if (result.changes === 0) {
     return res.status(404).json({ error: 'No encontrado' });
   }

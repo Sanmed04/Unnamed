@@ -360,7 +360,7 @@
    * currentCustomMessage: mensaje personalizado guardado (si ya es posible cliente) o null.
    * defaultPitch: mensaje generado por tipo de negocio para prellenar al marcar como posible cliente.
    */
-  function buildDetailPanelContent(place, isPosibleCliente, currentNote, currentCustomMessage, defaultPitch, onMarkPosibleCliente, onUnmarkPosibleCliente, onSaveNote, onSaveCustomMessage) {
+  function buildDetailPanelContent(place, isPosibleCliente, currentNote, currentCustomMessage, currentStatus, defaultPitch, onMarkPosibleCliente, onUnmarkPosibleCliente, onSaveNote, onSaveCustomMessage) {
     var phoneHtml = (place.formatted_phone_number)
       ? (function () {
           var raw = place.formatted_phone_number;
@@ -400,9 +400,21 @@
         '<p class="detail-message-hint">Podés editarlo antes de guardar. Se usará para ofrecer tu servicio a este negocio.</p></div>';
     }
 
+    var statusOpts = [
+      { value: '', label: 'Sin estado' },
+      { value: 'escribirle', label: 'Escribirle' },
+      { value: 'esperando_respuesta', label: 'Esperando respuesta' },
+      { value: 'rechazado', label: 'Rechazado' }
+    ];
+    var statusSelectHtml = statusOpts.map(function (o) {
+      var sel = (currentStatus || '') === o.value ? ' selected' : '';
+      return '<option value="' + Sanitize.escapeHtml(o.value) + '"' + sel + '>' + Sanitize.escapeHtml(o.label) + '</option>';
+    }).join('');
     var posibleBlock = '';
     if (isPosibleCliente) {
       posibleBlock = '<p class="detail-posible-label">✓ En tu lista de posibles clientes</p>' +
+        '<div class="detail-status-wrap"><label for="detailStatusSelect" class="detail-note-label">Estado</label>' +
+        '<select id="detailStatusSelect" class="detail-status-select" aria-label="Estado del posible cliente">' + statusSelectHtml + '</select></div>' +
         '<button type="button" class="btn-quitar-posible" id="btnUnmarkPosibleCliente">Quitar de la lista</button>' +
         '<div class="detail-note-wrap"><label for="detailNoteInput" class="detail-note-label">Tu nota</label>' +
         '<textarea id="detailNoteInput" class="detail-note-input" rows="3" placeholder="Agregá una nota para este negocio..." maxlength="1000">' + Sanitize.escapeHtml(currentNote || '') + '</textarea>' +

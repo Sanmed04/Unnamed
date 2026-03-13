@@ -22,6 +22,9 @@
   var UI = global.UI;
   var AuthApi = global.AuthApi || { getToken: function () { return ''; } };
 
+  var STATUS_LABELS = { '': 'Sin estado', 'escribirle': 'Escribirle', 'esperando_respuesta': 'Esperando respuesta', 'rechazado': 'Rechazado' };
+  function getStatusLabel(value) { return STATUS_LABELS[value] || value || 'Sin estado'; }
+
   function hasCoords() {
     return userLat != null && userLng != null;
   }
@@ -67,6 +70,8 @@
               note: p.note || '',
               custom_message: p.custom_message || '',
               place_description: p.place_description || '',
+              status: (p.status && String(p.status).trim()) ? String(p.status).trim() : '',
+              statusLabel: getStatusLabel((p.status && String(p.status).trim()) ? String(p.status).trim() : ''),
               addedAt: p.addedAt || new Date().toISOString()
             };
           });
@@ -112,6 +117,12 @@
       nameEl.className = 'posibles-extended-card-name';
       nameEl.textContent = item.name || 'Sin nombre';
       card.appendChild(nameEl);
+      if (item.statusLabel && item.statusLabel !== 'Sin estado') {
+        var statusEl = document.createElement('p');
+        statusEl.className = 'posibles-extended-status';
+        statusEl.textContent = item.statusLabel;
+        card.appendChild(statusEl);
+      }
       if (item.place_description) {
         var descLabel = document.createElement('p');
         descLabel.className = 'posibles-extended-label';
@@ -191,6 +202,8 @@
       note: '',
       custom_message: msg,
       place_description: '',
+      status: '',
+      statusLabel: getStatusLabel(''),
       addedAt: new Date().toISOString()
     };
     if (AuthApi.getToken()) {
@@ -232,6 +245,41 @@
   function getPlaceDescriptionForPlace(placeId) {
     var item = getPosiblesClientes().filter(function (p) { return p.place_id === placeId; })[0];
     return item && typeof item.place_description === 'string' ? item.place_description : '';
+  }
+
+  function getStatusForPlace(placeId) {
+    var item = getPosiblesClientes().filter(function (p) { return p.place_id === placeId; })[0];
+    return item && typeof item.status === 'string' ? item.status : '';
+  }
+
+  function updateStatus(placeId, status) {
+    var list = getPosiblesClientes();
+    var newStatus = typeof status === 'string' ? status : '';
+    if (AuthApi.getToken()) {
+      AuthApi.updateStatusOnServer(placeId, newStatus, function (err) {
+        if (err) return;
+        var idx = list.findIndex(function (p) { return p.place_id === placeId; });
+        if (idx !== -1) {
+          var copy = list.slice();
+          copy[idx] = Object.assign({}, copy[idx], { status: newStatus, statusLabel: getStatusLabel(newStatus) });
+          setPosiblesClientesList(copy);
+        }
+        refreshPosiblesClientesUI();
+      });
+    } else {
+      var updated = list.map(function (p) {
+        if (p.place_id === placeId) {
+          var out = {}; for (var k in p) out[k] = p[k];
+          out.status = newStatus;
+          out.statusLabel = getStatusLabel(newStatus);
+          return out;
+        }
+        return p;
+      });
+      setPosiblesClientesList(updated);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch (e) {}
+      refreshPosiblesClientesUI();
+    }
   }
 
   function updateCustomMessage(placeId, message) {
@@ -492,11 +540,13 @@
     var currentNote = getNoteForPlace(place.place_id);
     var currentCustomMessage = getCustomMessageForPlace(place.place_id);
     var defaultPitch = SearchLogic.generatePitchMessage ? SearchLogic.generatePitchMessage(place) : '';
+    var currentStatus = getStatusForPlace(place.place_id);
     var html = SearchLogic.buildDetailPanelContent(
       place,
       isPosible,
       currentNote,
       currentCustomMessage,
+      currentStatus,
       defaultPitch,
       function (customMessage) {
         addPosibleCliente(place, customMessage);
@@ -603,6 +653,8 @@
         openDetail(place);
       };
       if (btnUnmark) btnUnmark.onclick = function () { removePosibleCliente(place.place_id); openDetail(place); };
+      var statusSelect = document.getElementById('detailStatusSelect');
+      if (statusSelect) statusSelect.onchange = function () { updateStatus(place.place_id, statusSelect.value); };
       if (btnSaveNote && noteInput) {
         var saveNoteBtn = document.getElementById('btnSaveNote');
         if (saveNoteBtn) saveNoteBtn.onclick = function () {
@@ -930,7 +982,7 @@
     bindAuthEvents();
     refreshAuthUI();
     loadPosiblesClientes(function () {
-      UI.updatePosiblesClientes(getPosiblesClientes(), openDetailFromPosible);
+      refreshPosiblesClientesUI();
     });
   }
 

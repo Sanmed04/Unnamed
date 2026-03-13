@@ -18,6 +18,16 @@ function isQuotaError(err) {
   return m.indexOf('quota') !== -1 || m.indexOf('exceeded') !== -1 || m.indexOf('rate') !== -1;
 }
 
+function isKeyError(err) {
+  if (!err || !err.message) return false;
+  var m = String(err.message).toLowerCase();
+  return m.indexOf('expired') !== -1 || m.indexOf('invalid') !== -1 || m.indexOf('api key') !== -1;
+}
+
+function shouldTryNextKey(err, keyIndex, keysLength) {
+  return keyIndex + 1 < keysLength && (isQuotaError(err) || isKeyError(err));
+}
+
 var GEMINI_MODEL = (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite').trim();
 
 function hasGeminiKey() {
@@ -34,7 +44,7 @@ function generatePlaceDescription(name, address, typeLabel, callback) {
     'Dirección: ' + (address || '') + typeText;
 
   function tryKey(keyIndex) {
-    if (keyIndex >= keys.length) return callback(new Error('Todas las API keys de Gemini superaron la cuota. Reintentá más tarde.'), '');
+    if (keyIndex >= keys.length) return callback(new Error('Todas las API keys de Gemini fallaron (cuota o key vencida). Revisá GEMINI_API_KEYS y reintentá.'), '');
     var key = keys[keyIndex];
     var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(key);
     fetch(url, {
@@ -63,13 +73,13 @@ function generatePlaceDescription(name, address, typeLabel, callback) {
         }
         if (data.error) {
           var err = new Error(data.error.message || 'Gemini error');
-          if (isQuotaError(err) && keyIndex + 1 < keys.length) return tryKey(keyIndex + 1);
+          if (shouldTryNextKey(err, keyIndex, keys.length)) return tryKey(keyIndex + 1);
           return callback(err, '');
         }
         callback(null, text);
       })
       .catch(function (err) {
-        if (isQuotaError(err) && keyIndex + 1 < keys.length) return tryKey(keyIndex + 1);
+        if (shouldTryNextKey(err, keyIndex, keys.length)) return tryKey(keyIndex + 1);
         return callback(err, '');
       });
   }
@@ -100,7 +110,7 @@ function generateCustomMessage(description, businessName, callback) {
     'Respondé solo con el texto del mensaje, sin título ni explicaciones.';
 
   function tryKey(keyIndex) {
-    if (keyIndex >= keys.length) return callback(new Error('Todas las API keys de Gemini superaron la cuota. Reintentá más tarde.'), '');
+    if (keyIndex >= keys.length) return callback(new Error('Todas las API keys de Gemini fallaron (cuota o key vencida). Revisá GEMINI_API_KEYS y reintentá.'), '');
     var key = keys[keyIndex];
     var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + encodeURIComponent(key);
     fetch(url, {
@@ -125,7 +135,7 @@ function generateCustomMessage(description, businessName, callback) {
       .then(function (data) {
         if (data.error) {
           var err = new Error(data.error.message || 'Gemini error');
-          if (isQuotaError(err) && keyIndex + 1 < keys.length) return tryKey(keyIndex + 1);
+          if (shouldTryNextKey(err, keyIndex, keys.length)) return tryKey(keyIndex + 1);
           return callback(err, '');
         }
         var text = '';
@@ -135,7 +145,7 @@ function generateCustomMessage(description, businessName, callback) {
         callback(null, text);
       })
       .catch(function (err) {
-        if (isQuotaError(err) && keyIndex + 1 < keys.length) return tryKey(keyIndex + 1);
+        if (shouldTryNextKey(err, keyIndex, keys.length)) return tryKey(keyIndex + 1);
         return callback(err, '');
       });
   }

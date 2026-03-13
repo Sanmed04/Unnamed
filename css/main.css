@@ -1059,6 +1059,22 @@ body::before {
   border-radius: var(--radius);
 }
 
+.detail-status-wrap {
+  margin-top: 1rem;
+}
+
+.detail-status-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  font-size: 0.9rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
 .detail-note-wrap {
   margin-top: 1rem;
 }
@@ -1796,6 +1812,13 @@ h1 {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
+  margin: 0;
+}
+
+.posibles-extended-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
   margin: 0;
 }
 

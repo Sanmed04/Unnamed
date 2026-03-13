@@ -62,6 +62,11 @@ function initSchema(database) {
   } catch (e) {
     if (!/duplicate column name/i.test(e.message)) throw e;
   }
+  try {
+    database.exec(`ALTER TABLE posibles_clientes ADD COLUMN status TEXT DEFAULT ''`);
+  } catch (e) {
+    if (!/duplicate column name/i.test(e.message)) throw e;
+  }
 }
 
 module.exports = { getDb, initSchema };

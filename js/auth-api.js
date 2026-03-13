@@ -152,6 +152,12 @@
     request('PATCH', '/api/posibles-clientes/' + enc, { note: currentNote || '', custom_message: custom_message || '' }, callback);
   }
 
+  function updateStatusOnServer(placeId, status, callback) {
+    if (!getToken()) return callback(new Error('No hay sesión'), null);
+    var enc = encodeURIComponent(placeId);
+    request('PATCH', '/api/posibles-clientes/' + enc, { status: status || '' }, callback);
+  }
+
   global.AuthApi = {
     getToken: getToken,
     setToken: setToken,
@@ -165,6 +171,7 @@
     generateCustomMessageFromDescription: generateCustomMessageFromDescription,
     removePosibleClienteFromServer: removePosibleClienteFromServer,
     updateNoteOnServer: updateNoteOnServer,
-    updateCustomMessageOnServer: updateCustomMessageOnServer
+    updateCustomMessageOnServer: updateCustomMessageOnServer,
+    updateStatusOnServer: updateStatusOnServer
   };
 })(typeof window !== 'undefined' ? window : this);

@@ -180,7 +180,9 @@
     list.forEach(function (item) {
       var li = document.createElement('li');
       li.className = 'posible-item';
-      li.textContent = item.name || item.place_id || 'Sin nombre';
+      var name = item.name || item.place_id || 'Sin nombre';
+      var statusLabel = item.statusLabel && item.statusLabel !== 'Sin estado' ? item.statusLabel : '';
+      li.textContent = statusLabel ? name + ' · ' + statusLabel : name;
       if (typeof onItemClick === 'function') {
         li.setAttribute('role', 'button');
         li.setAttribute('tabindex', '0');

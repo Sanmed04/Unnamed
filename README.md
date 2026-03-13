@@ -54,7 +54,15 @@ El **backend** (Express + SQLite) permite registrar usuarios y guardar la lista 
    - Railway define `PORT` automáticamente.
 3. **Build**: no hace falta comando de build especial; las API keys se leen en runtime desde las variables de entorno.
 4. **Start**: `npm start` (o `pnpm run start`).
-5. **Persistencia**: la base SQLite usa el disco del servicio (efímero por defecto). Para que no se pierda al redesplegar, añadí un **volume** en Railway y la variable `SQLITE_DB_PATH` apuntando a una ruta en ese volume (ej. `/data/wjf.db`).
+5. **Persistencia (evitar perder usuarios y datos en redeploys)**  
+   La base SQLite por defecto está en el disco efímero del servicio; en cada redeploy puede borrarse. Para que persista:
+   - En tu proyecto de Railway → **tu servicio** (el backend).
+   - Pestaña **Variables** → **Add Variable** → Nueva variable: `SQLITE_DB_PATH` = `/data/wjf.db`.
+   - Pestaña **Settings** (o **Volumes**) → **Add Volume** (o **Mount**).  
+     - **Mount path**: `/data` (tiene que coincidir con la carpeta del path anterior).
+     - Guardar.
+   - Hacé un **redeploy** para que el servicio arranque con el volumen montado.  
+   A partir de ahí la base se guarda en el volumen y sobrevive a los redeploys. Si ya tenías usuarios, registralos de nuevo la primera vez después de añadir el volumen (la base empieza vacía en el volumen).
 
 ## Descripciones de negocios con Gemini (opcional)
 
