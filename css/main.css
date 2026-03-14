@@ -777,6 +777,48 @@ body::before {
   transform: scale(1) translateY(0);
 }
 
+.detail-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+  box-sizing: border-box;
+}
+
+.detail-nav .detail-nav-btn {
+  pointer-events: auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background, color, opacity var(--transition-base);
+}
+
+.detail-nav .detail-nav-btn:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.detail-nav .detail-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .detail-close {
   position: absolute;
   top: 1rem;

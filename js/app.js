@@ -10,6 +10,7 @@
   var searchLat = null;
   var searchLng = null;
   var currentPlaces = [];
+  var currentFilteredPlaces = [];
   var currentPlacesFromNameSearch = false;
   var STORAGE_KEY = 'donde_esta_posibles_clientes';
   var _posiblesClientesList = [];
@@ -423,6 +424,7 @@
 
     MapsApi.clearMarkers();
     if (filtered.length === 0) {
+      currentFilteredPlaces = [];
       UI.hideStates();
       UI.get('listHeader').style.display = 'none';
       UI.get('emptyState').classList.add('visible');
@@ -435,6 +437,7 @@
       return;
     }
 
+    currentFilteredPlaces = filtered.slice();
     UI.showListHeader(filtered.length);
     var cards = [];
     filtered.forEach(function (place, index) {
@@ -609,6 +612,32 @@
       var btnSaveMsg = document.getElementById('btnSaveCustomMessage');
       var descWrap = document.getElementById('detailDescriptionWrap');
       var btnGenerarMsg = document.getElementById('btnGenerarMensajeCliente');
+      var detailNav = UI.get('detailNav');
+      var detailNavPrev = UI.get('detailNavPrev');
+      var detailNavNext = UI.get('detailNavNext');
+      var idx = -1;
+      if (currentFilteredPlaces.length > 0 && place && place.place_id) {
+        for (var i = 0; i < currentFilteredPlaces.length; i++) {
+          if (currentFilteredPlaces[i].place_id === place.place_id) { idx = i; break; }
+        }
+      }
+      if (detailNav) {
+        if (idx >= 0) {
+          detailNav.style.display = '';
+          var prevPlace = idx > 0 ? currentFilteredPlaces[idx - 1] : null;
+          var nextPlace = idx < currentFilteredPlaces.length - 1 ? currentFilteredPlaces[idx + 1] : null;
+          if (detailNavPrev) {
+            detailNavPrev.disabled = !prevPlace;
+            detailNavPrev.onclick = prevPlace ? function () { openDetail(prevPlace); } : null;
+          }
+          if (detailNavNext) {
+            detailNavNext.disabled = !nextPlace;
+            detailNavNext.onclick = nextPlace ? function () { openDetail(nextPlace); } : null;
+          }
+        } else {
+          detailNav.style.display = 'none';
+        }
+      }
 
       function setDescriptionInPanel(description, isError, errorMessage) {
         lastDetailDescription = description || '';
